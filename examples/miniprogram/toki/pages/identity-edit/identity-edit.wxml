@@ -1,0 +1,104 @@
+<view class="page {{theme}} form-page">
+  <view class="form-bar">
+    <view class="form-bar-btn" bindtap="onBack">取消</view>
+    <view class="form-bar-title">{{title}}</view>
+    <view class="form-bar-btn form-bar-save" bindtap="onSave">保存</view>
+  </view>
+
+  <view class="seg">
+    <view class="seg-item {{type === 'email' ? 'on' : ''}}" data-type="email" bindtap="onType">邮箱</view>
+    <view class="seg-item {{type === 'phone' ? 'on' : ''}}" data-type="phone" bindtap="onType">手机号</view>
+    <view class="seg-item {{type === 'login' ? 'on' : ''}}" data-type="login" bindtap="onType">登录</view>
+  </view>
+
+  <view class="pills" wx:if="{{login}}">
+    <view class="pill {{provider === 'wechat' ? 'on' : ''}}" data-provider="wechat" bindtap="onProvider">微信</view>
+    <view class="pill {{provider === 'apple' ? 'on' : ''}}" data-provider="apple" bindtap="onProvider">Apple</view>
+  </view>
+
+  <view class="group" style="margin-top:20rpx;">
+    <view class="field">
+      <text class="field-label">{{fieldLabel}}</text>
+      <input
+        class="field-input"
+        value="{{value}}"
+        placeholder="{{placeholder}}"
+        placeholder-class="ph"
+        bindinput="onValue"
+      />
+    </view>
+    <view class="field">
+      <text class="field-label">标签</text>
+      <input
+        class="field-input"
+        value="{{label}}"
+        placeholder="主力、小号、工作…"
+        placeholder-class="ph"
+        bindinput="onLabel"
+      />
+    </view>
+  </view>
+
+  <view class="group" style="margin-top:20rpx;" wx:if="{{type === 'phone'}}">
+    <view class="field">
+      <text class="field-label">eSIM</text>
+      <view class="field-input switch-cell">
+        <switch checked="{{esim}}" color="#30d158" bindchange="onEsim" />
+      </view>
+    </view>
+  </view>
+  <view class="hint" wx:if="{{type === 'phone'}}">eSIM 没有实体卡，换手机时记得转移。</view>
+
+  <block wx:if="{{login}}">
+    <view class="section-title">绑定的手机号 / 邮箱</view>
+    <view class="group">
+      <view
+        wx:for="{{viaOptions}}"
+        wx:key="id"
+        class="pick-cell {{item.on ? 'on' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onVia"
+      >
+        <view class="dot" style="background:{{item.color || 'var(--ink-3)'}}"></view>
+        <view class="row-main">
+          <view class="row-title">{{item.label}}</view>
+          <view class="row-sub" wx:if="{{item.sub}}">{{item.sub}}</view>
+        </view>
+        <text class="tick" wx:if="{{item.on}}">✓</text>
+      </view>
+    </view>
+    <view class="hint">很多 App 支持用它登录，记录在这里，换手机号时能看出受影响的网站。</view>
+  </block>
+
+  <view class="section-title">卡面</view>
+  <view class="group">
+    <view class="colors">
+      <view
+        wx:for="{{colors}}"
+        wx:key="c"
+        class="color {{item.on ? 'on' : ''}}"
+        style="background-image:linear-gradient(145deg, {{item.c}} 0%, {{item.c}} 48%, #0d0d10 100%);"
+        data-color="{{item.c}}"
+        bindtap="onColor"
+      ></view>
+    </view>
+  </view>
+
+  <view class="section-title">备注</view>
+  <view class="group">
+    <view class="field field-stack">
+      <textarea
+        class="field-textarea"
+        value="{{notes}}"
+        placeholder="运营商、是否实名、找回方式"
+        placeholder-class="ph"
+        bindinput="onNotes"
+      />
+    </view>
+  </view>
+  <view class="hint">不要在这里填写密码。</view>
+
+  <view class="danger-zone" wx:if="{{deleteText}}">
+    <view class="btn btn-danger btn-block" bindtap="onDelete">{{deleteText}}</view>
+  </view>
+</view>

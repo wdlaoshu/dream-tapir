@@ -1,0 +1,56 @@
+<import src="../../templates/tabbar.wxml" />
+
+<view class="page {{theme}}">
+  <view class="top">
+    <view class="h1">关系图</view>
+    <view class="round-group">
+      <view class="round" bindtap="onAdd">+</view>
+    </view>
+  </view>
+  <view class="summary">身份 → 平台 → 密钥，同一平台只显示一个节点</view>
+
+  <view class="empty" wx:if="{{empty}}">
+    <view class="h2">还没有可以连线的</view>
+    <view class="sub empty-sub">添加一个邮箱或手机号，再给它记几个网站，这里就会连起来。</view>
+    <view class="btn" bindtap="onAdd">添加邮箱或手机号</view>
+  </view>
+
+  <view wx:else class="graph-scroll">
+    <view class="graph-wrap" style="height:{{height}}rpx;">
+      <view
+        wx:for="{{edges}}"
+        wx:key="id"
+        class="gedge"
+        style="{{item.style}}"
+      ></view>
+
+      <view
+        wx:for="{{colHeads}}"
+        wx:for-item="h"
+        wx:key="label"
+        class="ghead"
+        style="{{h.style}}"
+      >{{h.label}}</view>
+
+      <view
+        wx:for="{{nodes}}"
+        wx:for-item="n"
+        wx:key="key"
+        class="gnode {{n.loose ? 'loose' : ''}}"
+        style="{{n.style}}"
+        data-kind="{{n.kind}}"
+        data-id="{{n.id}}"
+        bindtap="onNode"
+      >
+        <view class="tile tile-sm" style="{{n.tileStyle}}">{{n.letter}}</view>
+        <view class="gnode-main">
+          <view class="gnode-title">{{n.title}}</view>
+          <view class="gnode-sub" wx:if="{{n.sub}}">{{n.sub}}</view>
+        </view>
+        <view class="gnode-badge" wx:if="{{n.badge}}">{{n.badge}}</view>
+      </view>
+    </view>
+  </view>
+
+  <template is="tabbar" data="{{active: active}}" />
+</view>

@@ -1,0 +1,62 @@
+.summary {
+  font-size: 26rpx;
+  color: var(--ink-2);
+  padding: 6rpx 8rpx 4rpx;
+  line-height: 1.5;
+}
+
+.card-count-n {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-right: 6rpx;
+}
+
+.dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+
+.dot.on {
+  background: var(--ink);
+}
+
+.empty-sub {
+  padding: 0 30rpx;
+}
+
+.block-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 26rpx 12rpx 14rpx;
+}
+
+.block-title {
+  min-width: 0;
+}
+
+.tile-add {
+  background: var(--field);
+  color: var(--ink-3);
+  border: 2rpx dashed var(--line);
+}
+
+.tile-more {
+  background: var(--field);
+  color: var(--ink-2);
+  font-size: 24rpx;
+}
+
+.popup-close {
+  font-size: 26rpx;
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+.row-danger {
+  color: var(--danger);
+}

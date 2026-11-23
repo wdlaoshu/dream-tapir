@@ -1,0 +1,82 @@
+.summary {
+  font-size: 26rpx;
+  color: var(--ink-2);
+  padding: 6rpx 12rpx 10rpx;
+  line-height: 1.5;
+}
+
+.empty-sub {
+  padding: 0 30rpx;
+}
+
+.graph-scroll {
+  background: var(--panel);
+  border-radius: 30rpx;
+  padding: 0;
+  overflow: hidden;
+}
+
+.graph-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.gedge {
+  position: absolute;
+  height: 2rpx;
+  transform-origin: 0 50%;
+  opacity: 0.6;
+}
+
+.ghead {
+  position: absolute;
+  font-size: 20rpx;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.gnode {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 10rpx 12rpx;
+  border-radius: 22rpx;
+  background: var(--panel-solid);
+  border: 1rpx solid var(--line);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gnode.loose {
+  opacity: 0.72;
+}
+
+.gnode-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.gnode-title {
+  font-size: 22rpx;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gnode-sub {
+  font-size: 18rpx;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gnode-badge {
+  position: absolute;
+  top: 6rpx;
+  right: 8rpx;
+  font-size: 18rpx;
+  color: var(--ink-3);
+}

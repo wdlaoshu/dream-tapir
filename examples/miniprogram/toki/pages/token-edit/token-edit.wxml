@@ -1,0 +1,166 @@
+<view class="page {{theme}} form-page">
+  <view class="form-bar">
+    <view class="form-bar-btn" bindtap="onBack">取消</view>
+    <view class="form-bar-title">{{title}}</view>
+    <view class="form-bar-btn form-bar-save" bindtap="onSave">保存</view>
+  </view>
+
+  <view class="hero">
+    <view class="tile tile-lg" style="background:{{previewBg}}">{{previewLetter}}</view>
+    <view class="hero-name">{{name || platform || '新密钥'}}</view>
+    <view class="hero-sub">{{platform || '先选择平台'}}</view>
+  </view>
+
+  <view class="group" style="margin-top:20rpx;">
+    <view class="field" bindtap="openPlatform">
+      <text class="field-label">平台</text>
+      <view class="field-input link-val">{{platform || '选择平台'}}</view>
+      <text class="chev">›</text>
+    </view>
+    <view class="field">
+      <text class="field-label">名称</text>
+      <input
+        class="field-input"
+        value="{{name}}"
+        placeholder="例如：博客部署 PAT"
+        placeholder-class="ph"
+        bindinput="onName"
+      />
+    </view>
+    <view class="field">
+      <text class="field-label">网址</text>
+      <input
+        class="field-input"
+        value="{{domain}}"
+        placeholder="选填，用来识别平台"
+        placeholder-class="ph"
+        bindinput="onDomain"
+      />
+    </view>
+  </view>
+
+  <view class="section-title">密钥</view>
+  <view class="group">
+    <view class="field field-stack">
+      <textarea
+        class="field-textarea mono"
+        value="{{value}}"
+        placeholder="粘贴 API Key、Access Token 或 Gist Token"
+        placeholder-class="ph"
+        bindinput="onValue"
+      />
+    </view>
+  </view>
+  <view class="hint">默认打码显示，列表里点「显示」才展开。密钥只保存在这台设备上。</view>
+
+  <view class="section-title">有效期</view>
+  <view class="pills">
+    <view class="pill {{expiryMode === 'never' ? 'on' : ''}}" data-mode="never" bindtap="onExpiryMode">无限期</view>
+    <view class="pill {{expiryMode === 'date' ? 'on' : ''}}" data-mode="date" bindtap="onExpiryMode">指定日期</view>
+  </view>
+  <view class="group" style="margin-top:14rpx;" wx:if="{{expiryMode === 'date'}}">
+    <picker mode="date" value="{{expiryDate}}" bindchange="onExpiryDate">
+      <view class="field">
+        <text class="field-label">到期</text>
+        <view class="field-input">{{expiryDate}}</view>
+        <text class="chev">›</text>
+      </view>
+    </picker>
+  </view>
+
+  <view class="section-title">关联账号</view>
+  <view class="group" wx:if="{{accounts.length}}">
+    <view
+      wx:for="{{accounts}}"
+      wx:key="id"
+      class="pick-cell {{item.on ? 'on' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onPickAccount"
+    >
+      <view class="dot" style="background:{{previewBg}}"></view>
+      <view class="row-main"><view class="row-title">{{item.name}}</view></view>
+      <text class="tick" wx:if="{{item.on}}">✓</text>
+    </view>
+  </view>
+  <view class="hint" wx:else>这个平台下还没有记录过账号。先添加网站与 App，就能把密钥精确关联到某个账号。</view>
+
+  <view class="section-title">分类</view>
+  <scroll-view class="cat-row" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view
+      wx:for="{{cats}}"
+      wx:key="*this"
+      class="pill {{category === item ? 'on' : ''}}"
+      data-cat="{{item}}"
+      bindtap="onCatChip"
+    >{{item}}</view>
+  </scroll-view>
+  <view class="group">
+    <view class="field">
+      <text class="field-label">自定义</text>
+      <input
+        class="field-input"
+        value="{{category}}"
+        placeholder="手填分类，可自定义"
+        placeholder-class="ph"
+        bindinput="onCategory"
+      />
+    </view>
+  </view>
+
+  <view class="section-title">备注</view>
+  <view class="group">
+    <view class="field field-stack">
+      <textarea
+        class="field-textarea"
+        value="{{notes}}"
+        placeholder="用途、创建位置、注意事项"
+        placeholder-class="ph"
+        bindinput="onNotes"
+      />
+    </view>
+  </view>
+
+  <view class="danger-zone" wx:if="{{deleteText}}">
+    <view class="btn btn-danger btn-block" bindtap="onDelete">{{deleteText}}</view>
+  </view>
+
+  <view wx:if="{{platformOpen}}" class="mask" bindtap="closePlatform"></view>
+  <view wx:if="{{platformOpen}}" class="popup">
+    <view class="popup-head">
+      <text>选择平台</text>
+      <text class="popup-close" bindtap="closePlatform">关闭</text>
+    </view>
+    <view class="popup-search">
+      <input
+        class="field-input"
+        value="{{platformQuery}}"
+        placeholder="搜索平台，或直接输入自定义名称"
+        placeholder-class="ph"
+        bindinput="onPlatformQuery"
+      />
+    </view>
+    <view class="popup-body">
+      <scroll-view class="scroll-y" scroll-y="{{true}}">
+        <view
+          wx:for="{{platformList}}"
+          wx:key="name"
+          class="row"
+          data-i="{{index}}"
+          bindtap="onPickPlatform"
+        >
+          <view class="tile tile-sm" style="background:{{item.color}}">{{item.letter}}</view>
+          <view class="row-main">
+            <view class="row-title">{{item.name}}</view>
+            <view class="row-sub">{{item.category}} · {{item.domain}}</view>
+          </view>
+        </view>
+        <view class="row" bindtap="onUseCustom">
+          <view class="tile tile-sm" style="background:#8e8e93">+</view>
+          <view class="row-main">
+            <view class="row-title">用「{{platformQuery || platform || '自定义平台'}}」</view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

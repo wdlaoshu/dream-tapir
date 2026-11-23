@@ -1,0 +1,21 @@
+<!-- 共用底部导航。小程序 tabBar 在 Web 容器里没有实现，所以四页各自渲染一份。 -->
+<template name="tabbar">
+  <view class="tabbar">
+    <view class="tab {{active === 'home' ? 'on' : ''}}" data-tab="home" bindtap="onTab">
+      <text class="tab-ic">◉</text>
+      <text>账号</text>
+    </view>
+    <view class="tab {{active === 'sites' ? 'on' : ''}}" data-tab="sites" bindtap="onTab">
+      <text class="tab-ic">▦</text>
+      <text>网站</text>
+    </view>
+    <view class="tab {{active === 'tokens' ? 'on' : ''}}" data-tab="tokens" bindtap="onTab">
+      <text class="tab-ic">❖</text>
+      <text>密钥</text>
+    </view>
+    <view class="tab {{active === 'graph' ? 'on' : ''}}" data-tab="graph" bindtap="onTab">
+      <text class="tab-ic">◈</text>
+      <text>关系图</text>
+    </view>
+  </view>
+</template>

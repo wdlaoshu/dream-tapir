@@ -1,0 +1,20 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/sites/sites",
+    "pages/tokens/tokens",
+    "pages/graph/graph",
+    "pages/identity-edit/identity-edit",
+    "pages/account-edit/account-edit",
+    "pages/token-edit/token-edit",
+    "pages/backup/backup"
+  ],
+  "window": {
+    "navigationBarTitleText": "Toki",
+    "navigationBarBackgroundColor": "#000000",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#000000",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2"
+}
