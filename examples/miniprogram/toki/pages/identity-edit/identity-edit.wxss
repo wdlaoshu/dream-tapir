@@ -38,3 +38,23 @@
 .danger-zone {
   margin-top: 40rpx;
 }
+
+.hero {
+  display: flex;
+  justify-content: center;
+  padding: 24rpx 0 4rpx;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.tick {
+  color: var(--accent);
+}
+
+.btn {
+  gap: 10rpx;
+}
