@@ -1,0 +1,48 @@
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-title">{{hasExit ? '修改结束信息' : '结束持有'}}</view>
+    <view class="hero-sub">{{itemName}}</view>
+  </view>
+
+  <view class="form">
+    <view class="field">
+      <view class="field-label">原因</view>
+      <view class="chips">
+        <view wx:for="{{reasonOptions}}" wx:key="id" class="chip {{reason === item.id ? 'on' : ''}}"
+          data-key="{{item.id}}" bindtap="pickReason">
+          <text class="chip-emoji">{{item.emoji}}</text>{{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-inline">
+        <view class="field-label">结束日期</view>
+        <picker mode="date" value="{{exitedOn}}" start="{{acquiredOn}}" end="{{today}}" bindchange="onDateChange">
+          <view class="picker-value">{{exitedOn}}</view>
+        </picker>
+      </view>
+      <view class="field-hint">购入日期 {{acquiredOn}}，结束日期不能早于它。</view>
+    </view>
+
+    <view wx:if="{{reason === 'sold'}}" class="field">
+      <view class="field-label">回收金额（元，可留空）</view>
+      <input class="field-input" value="{{recoveryText}}" type="digit" placeholder="0.00"
+        placeholder-class="field-input-placeholder" bindinput="onRecovery" />
+      <view class="field-hint">会算进累计回收，日均成本按「净支出 ÷ 陪伴天数」重算。</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">备注</view>
+      <textarea class="textarea" value="{{note}}" maxlength="2000" placeholder="卖给谁 / 为什么丢弃…"
+        placeholder-class="field-input-placeholder" bindinput="onNote" />
+    </view>
+  </view>
+
+  <view class="actions">
+    <button class="btn btn-accent btn-full" bindtap="save">{{hasExit ? '保存修改' : '结束持有'}}</button>
+  </view>
+  <view wx:if="{{hasExit}}" class="actions">
+    <button class="btn btn-full" bindtap="undo">撤销结束持有</button>
+  </view>
+</view>

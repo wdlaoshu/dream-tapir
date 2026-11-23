@@ -1,0 +1,61 @@
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-title">{{isEditing ? '编辑记录' : (direction === 'expense' ? '记一笔支出' : '记一笔收入')}}</view>
+    <view class="hero-sub">{{itemName}}</view>
+  </view>
+
+  <view class="form">
+    <view class="field">
+      <view class="field-label">方向</view>
+      <view class="segmented">
+        <view class="segmented-item {{direction === 'expense' ? 'on' : ''}}" data-key="expense" bindtap="pickDirection">支出</view>
+        <view class="segmented-item {{direction === 'income' ? 'on' : ''}}" data-key="income" bindtap="pickDirection">收入</view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">类型</view>
+      <view class="chips">
+        <view wx:for="{{kindOptions}}" wx:key="id" class="chip {{kind === item.id ? 'on' : ''}}"
+          data-key="{{item.id}}" bindtap="pickKind">
+          <text class="chip-emoji">{{item.emoji}}</text>{{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">金额（元）</view>
+      <input class="field-input" value="{{amountText}}" type="digit" placeholder="0.00"
+        placeholder-class="field-input-placeholder" bindinput="onAmount" focus="{{!isEditing}}" />
+      <view class="field-hint">整数分存储，最多两位小数。</view>
+    </view>
+
+    <view class="field">
+      <view class="field-inline">
+        <view class="field-label">日期</view>
+        <picker mode="date" value="{{occurredOn}}" end="{{today}}" bindchange="onDateChange">
+          <view class="picker-value">{{occurredOn}}</view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">事项</view>
+      <input class="field-input" value="{{title}}" placeholder="例如：换耳罩 / 卖掉旧机"
+        placeholder-class="field-input-placeholder" bindinput="onTitle" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">备注</view>
+      <textarea class="textarea" value="{{note}}" maxlength="2000" placeholder="可有可无"
+        placeholder-class="field-input-placeholder" bindinput="onNote" />
+    </view>
+  </view>
+
+  <view class="actions">
+    <button class="btn btn-accent btn-full" bindtap="save">{{isEditing ? '保存修改' : '记下这一笔'}}</button>
+  </view>
+  <view wx:if="{{isEditing}}" class="actions">
+    <button class="btn btn-danger btn-full" bindtap="remove">删除这笔记录</button>
+  </view>
+</view>

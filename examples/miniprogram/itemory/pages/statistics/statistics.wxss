@@ -1,0 +1,27 @@
+/* 统计 */
+
+.period-bar {
+  white-space: nowrap;
+  padding: 16rpx 24rpx 0;
+  box-sizing: border-box;
+}
+
+.period-bar .chip {
+  display: inline-block;
+  margin-right: 12rpx;
+}
+
+.timeline-emoji {
+  width: 56rpx;
+  font-size: 34rpx;
+  flex-shrink: 0;
+}
+
+.group-hint {
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.bar-row:first-of-type {
+  padding-top: 20rpx;
+}

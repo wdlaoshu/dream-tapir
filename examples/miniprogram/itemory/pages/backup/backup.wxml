@@ -1,0 +1,108 @@
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-title">备份</view>
+    <view class="hero-sub">导出一份 JSON 带走，粘回来就能恢复</view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">当前数据</text></view>
+    <view class="metric-grid">
+      <view class="metric">
+        <view class="metric-value">{{counts.items}}</view>
+        <view class="metric-label">物品</view>
+      </view>
+      <view class="metric">
+        <view class="metric-value">{{counts.moneyEntries}}</view>
+        <view class="metric-label">流水</view>
+      </view>
+      <view class="metric">
+        <view class="metric-value">{{counts.categories}}</view>
+        <view class="metric-label">分类</view>
+      </view>
+      <view class="metric">
+        <view class="metric-value">{{counts.tags}}</view>
+        <view class="metric-label">标签</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">导出</text></view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">包含封面图片</view>
+        <view class="row-sub">封面以 data URL 内嵌，文件会变大但能完整还原</view>
+      </view>
+      <switch checked="{{includeCovers}}" bindchange="toggleCovers" color="#0A84FF" />
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">复制备份到剪贴板</view>
+        <view class="row-sub">{{lastExportText || '四端一致的做法：复制后自己粘到备忘录或文件里'}}</view>
+      </view>
+      <view class="btn" bindtap="exportAll">导出</view>
+    </view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">导入</text></view>
+    <view class="row" bindtap="pasteFromClipboard">
+      <view class="row-main">
+        <view class="row-title">从剪贴板导入</view>
+        <view class="row-sub">先复制备份 JSON，再点这里</view>
+      </view>
+      <view class="row-chevron"></view>
+    </view>
+    <view class="row" bindtap="openImport">
+      <view class="row-main">
+        <view class="row-title">手动粘贴 JSON</view>
+        <view class="row-sub">粘贴后选择「替换」或「追加合并」</view>
+      </view>
+      <view class="row-chevron"></view>
+    </view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">维护</text></view>
+    <view class="row" bindtap="loadDemo">
+      <view class="row-main">
+        <view class="row-title">载入示例数据</view>
+        <view class="row-sub">会替换当前数据，用来看效果</view>
+      </view>
+      <view class="row-chevron"></view>
+    </view>
+    <view class="row" bindtap="resetAll">
+      <view class="row-main">
+        <view class="row-title danger-text">清空所有数据</view>
+        <view class="row-sub">不可恢复，建议先导出</view>
+      </view>
+      <view class="row-chevron"></view>
+    </view>
+  </view>
+
+  <view class="hint">
+    备份是明文 JSON：物品名、备注、金额和封面都在里面，请放在自己信任的地方。
+    桌面版的 .itemory（SQLite）和 .zip 交换包不能直接导入这里，一期没有做 SQLite 解析。
+  </view>
+
+  <!-- 导入面板 -->
+  <view wx:if="{{importOpen}}" class="sheet-mask" bindtap="closeImport"></view>
+  <view wx:if="{{importOpen}}" class="sheet sheet-tall">
+    <view class="sheet-head">
+      <view class="sheet-title">粘贴备份 JSON</view>
+      <view class="sheet-close" bindtap="closeImport">✕</view>
+    </view>
+    <textarea class="import-textarea" value="{{importText}}" placeholder="在这里粘贴导出的 JSON"
+      placeholder-class="field-input-placeholder" bindinput="onImportText" />
+    <view class="field">
+      <view class="field-label">导入方式</view>
+      <view class="segmented">
+        <view class="segmented-item {{mode === 'merge' ? 'on' : ''}}" data-mode="merge" bindtap="pickMode">追加合并</view>
+        <view class="segmented-item {{mode === 'replace' ? 'on' : ''}}" data-mode="replace" bindtap="pickMode">替换数据</view>
+      </view>
+    </view>
+    <view class="sheet-foot">
+      <button class="btn btn-accent btn-full" bindtap="doImport">开始导入</button>
+    </view>
+  </view>
+</view>

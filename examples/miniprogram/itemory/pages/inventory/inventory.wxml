@@ -1,0 +1,131 @@
+<import src="../../templates/tabbar.wxml" />
+
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-row">
+      <view>
+        <view class="hero-title">物品</view>
+        <view class="hero-sub">{{overview.itemCount}} 件物品 · {{overview.activeCount}} 件在持</view>
+      </view>
+      <view class="hero-actions">
+        <view class="btn btn-round" bindtap="toggleLayout">{{layout === 'shelf' ? '☰' : '▦'}}</view>
+        <view class="btn btn-round" bindtap="openFilter">⚙︎</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="summary">
+    <view class="summary-cell">
+      <view class="summary-value">{{overview.activeCount}}</view>
+      <view class="summary-label">在持</view>
+    </view>
+    <view class="summary-cell">
+      <view class="summary-value">{{overview.totalExpenseText}}</view>
+      <view class="summary-label">在持物品投入</view>
+    </view>
+    <view class="summary-cell">
+      <view class="summary-value">{{overview.totalDailyText}}</view>
+      <view class="summary-label">合计日均</view>
+    </view>
+  </view>
+
+  <view class="search-wrap">
+    <input class="search" value="{{keyword}}" placeholder="搜索名称、渠道、备注、分类、标签"
+      placeholder-class="field-input-placeholder" confirm-type="search" bindinput="onSearch" />
+    <view wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</view>
+  </view>
+
+  <!-- 置物架：两列网格 -->
+  <view wx:if="{{layout === 'shelf'}}" class="shelf">
+    <view class="shelf-card" wx:for="{{cards}}" wx:key="id" data-id="{{item.id}}" bindtap="openItem">
+      <view class="shelf-thumb">
+        <image wx:if="{{item.coverPath}}" class="shelf-cover" src="{{item.coverPath}}" mode="aspectFill" />
+        <text wx:else class="shelf-emoji">{{item.emoji}}</text>
+        <view wx:if="{{item.isExited}}" class="badge-float">{{item.exitReasonText}}</view>
+      </view>
+      <view class="shelf-body">
+        <view class="shelf-name">{{item.name}}</view>
+        <view class="shelf-meta">{{item.categoryName}} · {{item.holdingText}}</view>
+        <view class="shelf-foot">
+          <text>{{item.dailyCostText}}</text>
+          <text>{{item.knownPriceText || '价未知'}}</text>
+        </view>
+        <view wx:if="{{item.tags.length}}" class="tag-line">
+          <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="id" class="tag-chip"
+            style="background:{{tag.color}}">{{tag.name}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 时间线：一行一件 -->
+  <view wx:if="{{layout === 'timeline'}}">
+    <view class="entry" wx:for="{{cards}}" wx:key="id" data-id="{{item.id}}" bindtap="openItem">
+      <view class="entry-emoji">
+        <image wx:if="{{item.coverPath}}" class="entry-cover" src="{{item.coverPath}}" mode="aspectFill" />
+        <text wx:else>{{item.emoji}}</text>
+      </view>
+      <view class="entry-main">
+        <view class="entry-title">{{item.name}}</view>
+        <view class="entry-sub">{{item.acquiredText}} 购入 · {{item.holdingText}}</view>
+        <view class="entry-sub">{{item.dailyCostText}}</view>
+      </view>
+      <view class="entry-side">
+        <view class="entry-amount">{{item.knownPriceText || '—'}}</view>
+        <view class="pill" style="background:{{item.statusColor}}">{{item.statusLabel}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!cards.length}}" class="empty">
+    <view class="empty-emoji">{{isEmpty ? '📦' : '🔍'}}</view>
+    <view class="empty-title">{{isEmpty ? '还没有记录物品' : '没有匹配的物品'}}</view>
+    <view class="empty-text">{{isEmpty ? '记下第一件物品的购入价和日期，就能看到它的日均成本。' : '换个关键词，或者把筛选条件放宽。'}}</view>
+    <view wx:if="{{isEmpty}}" class="empty-action">
+      <button class="btn btn-accent" bindtap="addItem">添加第一件物品</button>
+    </view>
+  </view>
+
+  <view class="fab" bindtap="addItem">＋</view>
+
+  <!-- 筛选面板 -->
+  <view wx:if="{{filterOpen}}" class="sheet-mask" bindtap="closeFilter"></view>
+  <view wx:if="{{filterOpen}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">筛选与排序</view>
+      <view class="sheet-close" bindtap="closeFilter">✕</view>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view class="sheet-label">分类</view>
+      <view class="chips">
+        <view class="chip {{categoryFilter === 'all' ? 'on' : ''}}" data-id="all" bindtap="pickCategory">全部</view>
+        <view class="chip {{categoryFilter === 'uncategorized' ? 'on' : ''}}" data-id="uncategorized" bindtap="pickCategory">未分类</view>
+        <view wx:for="{{categories}}" wx:key="id" class="chip {{categoryFilter === item.id ? 'on' : ''}}"
+          data-id="{{item.id}}" bindtap="pickCategory">
+          <text class="chip-emoji">{{item.emoji}}</text>{{item.name}}
+        </view>
+      </view>
+
+      <view class="sheet-label">状态</view>
+      <view class="chips">
+        <view wx:for="{{statusOptions}}" wx:key="key" class="chip {{statusFilter === item.key ? 'on' : ''}}"
+          data-key="{{item.key}}" bindtap="pickStatus">{{item.label}}</view>
+      </view>
+
+      <view class="sheet-label">排序（再点一次切正序/倒序）</view>
+      <view class="chips">
+        <view wx:for="{{sortOptions}}" wx:key="key" class="chip {{sortField === item.key ? 'on' : ''}}"
+          data-key="{{item.key}}" bindtap="pickSort">
+          {{item.label}}{{sortField === item.key ? (sortDirection === 'desc' ? ' ↓' : ' ↑') : ''}}
+        </view>
+      </view>
+
+      <view class="sheet-foot">
+        <button class="btn btn-full" bindtap="resetFilter">恢复默认</button>
+        <button class="btn btn-accent btn-full" bindtap="closeFilter">完成</button>
+      </view>
+    </scroll-view>
+  </view>
+
+  <template is="tabbar" data="{{active}}" />
+</view>

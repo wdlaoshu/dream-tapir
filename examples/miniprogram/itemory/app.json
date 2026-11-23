@@ -1,0 +1,20 @@
+{
+  "pages": [
+    "pages/inventory/inventory",
+    "pages/item/item",
+    "pages/item-edit/item-edit",
+    "pages/money-edit/money-edit",
+    "pages/exit-edit/exit-edit",
+    "pages/statistics/statistics",
+    "pages/settings/settings",
+    "pages/backup/backup"
+  ],
+  "window": {
+    "navigationBarTitleText": "Itemory",
+    "navigationBarBackgroundColor": "#0A84FF",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F2F2F7",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2"
+}

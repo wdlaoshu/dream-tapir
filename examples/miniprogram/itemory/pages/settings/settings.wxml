@@ -1,0 +1,153 @@
+<import src="../../templates/tabbar.wxml" />
+
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-title">设置</view>
+    <view class="hero-sub">物品档案与持有成本</view>
+  </view>
+
+  <!-- 显示 -->
+  <view class="group">
+    <view class="group-head"><text class="group-title">显示</text></view>
+    <view class="field">
+      <view class="field-label">外观</view>
+      <view class="segmented">
+        <view class="segmented-item {{themeChoice === 'auto' ? 'on' : ''}}" data-value="auto" bindtap="pickTheme">跟随系统</view>
+        <view class="segmented-item {{themeChoice === 'light' ? 'on' : ''}}" data-value="light" bindtap="pickTheme">浅色</view>
+        <view class="segmented-item {{themeChoice === 'dark' ? 'on' : ''}}" data-value="dark" bindtap="pickTheme">深色</view>
+      </view>
+    </view>
+    <view class="field">
+      <view class="field-label">物品列表默认布局</view>
+      <view class="segmented">
+        <view class="segmented-item {{layout === 'shelf' ? 'on' : ''}}" data-value="shelf" bindtap="pickLayout">置物架</view>
+        <view class="segmented-item {{layout === 'timeline' ? 'on' : ''}}" data-value="timeline" bindtap="pickLayout">时间线</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类 -->
+  <view class="group">
+    <view class="group-head">
+      <text class="group-title">分类</text>
+      <text class="group-action" bindtap="newCategory">＋ 新建</text>
+    </view>
+    <view class="row" wx:for="{{categories}}" wx:key="id" data-id="{{item.id}}" bindtap="editCategory">
+      <view class="timeline-emoji">{{item.emoji}}</view>
+      <view class="row-main"><view class="row-title">{{item.name}}</view></view>
+      <view wx:if="{{item.isSystem}}" class="row-value muted">系统</view>
+      <view class="row-chevron"></view>
+    </view>
+  </view>
+
+  <!-- 标签 -->
+  <view class="group">
+    <view class="group-head">
+      <text class="group-title">标签</text>
+      <text class="group-action" bindtap="newTag">＋ 新建</text>
+    </view>
+    <view wx:if="{{!tags.length}}" class="hint">标签用来给物品做跨分类的标记，比如「通勤」「出差」。一期不参与成本口径。</view>
+    <view class="row" wx:for="{{tags}}" wx:key="id" data-id="{{item.id}}" bindtap="editTag">
+      <view class="tag-dot" style="background:{{item.color}}"></view>
+      <view class="row-main"><view class="row-title">{{item.name}}</view></view>
+      <view class="row-chevron"></view>
+    </view>
+  </view>
+
+  <!-- 数据 -->
+  <view class="group">
+    <view class="group-head"><text class="group-title">数据</text></view>
+    <view class="row" bindtap="gotoBackup">
+      <view class="row-main">
+        <view class="row-title">备份与导入</view>
+        <view class="row-sub">{{counts.items}} 件物品 · {{counts.moneyEntries}} 笔流水 · {{counts.exits}} 次结束持有</view>
+      </view>
+      <view class="row-chevron"></view>
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">存储方式</view>
+        <view class="row-sub">本机 JSON（atlas 之外的单键存储），封面存为本地文件</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 关于 -->
+  <view class="group">
+    <view class="group-head"><text class="group-title">关于</text></view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">Itemory 小程序版</view>
+        <view class="row-sub">移植自 StarYunLee/Scripting 的 Itemory 1.0.0 · MIT</view>
+      </view>
+      <view class="row-value">一期</view>
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">运行环境</view>
+        <view class="row-sub">滴滴 Dimina（dream-tapir）· Android / iOS / Harmony / Web</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="hint">
+    桌面版的 SQLite、Keychain、AI 识图、封面裁剪、复核和 .zip 数据交换不在一期范围内；
+    数据格式与桌面版字段一致，方便将来对齐。
+  </view>
+
+  <!-- 分类编辑 -->
+  <view wx:if="{{catOpen}}" class="sheet-mask" bindtap="closeCategory"></view>
+  <view wx:if="{{catOpen}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">{{catId ? '编辑分类' : '新建分类'}}</view>
+      <view class="sheet-close" bindtap="closeCategory">✕</view>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view class="field">
+        <view class="field-label">名称</view>
+        <input class="field-input" value="{{catName}}" placeholder="例如：摄影器材"
+          placeholder-class="field-input-placeholder" bindinput="onCatName" />
+      </view>
+      <view class="field">
+        <view class="field-label">图标</view>
+        <view class="emoji-grid">
+          <view wx:for="{{categoryEmojis}}" wx:key="*this" class="emoji-cell {{catEmoji === item ? 'on' : ''}}"
+            data-emoji="{{item}}" bindtap="pickCatEmoji">{{item}}</view>
+        </view>
+      </view>
+      <view class="sheet-foot">
+        <button wx:if="{{catId && !catIsSystem}}" class="btn btn-danger btn-full" bindtap="deleteCategory">删除</button>
+        <button class="btn btn-accent btn-full" bindtap="saveCategory">保存</button>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 标签编辑 -->
+  <view wx:if="{{tagOpen}}" class="sheet-mask" bindtap="closeTag"></view>
+  <view wx:if="{{tagOpen}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">{{tagId ? '编辑标签' : '新建标签'}}</view>
+      <view class="sheet-close" bindtap="closeTag">✕</view>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view class="field">
+        <view class="field-label">名称</view>
+        <input class="field-input" value="{{tagName}}" placeholder="例如：通勤"
+          placeholder-class="field-input-placeholder" bindinput="onTagName" />
+      </view>
+      <view class="field">
+        <view class="field-label">颜色</view>
+        <view class="color-row">
+          <view wx:for="{{tagColors}}" wx:key="*this" class="color-dot {{tagColor === item ? 'on' : ''}}"
+            style="background:{{item}}" data-color="{{item}}" bindtap="pickTagColor"></view>
+        </view>
+      </view>
+      <view class="sheet-foot">
+        <button wx:if="{{tagId}}" class="btn btn-danger btn-full" bindtap="deleteTag">删除</button>
+        <button class="btn btn-accent btn-full" bindtap="saveTag">保存</button>
+      </view>
+    </scroll-view>
+  </view>
+
+  <template is="tabbar" data="{{active}}" />
+</view>
