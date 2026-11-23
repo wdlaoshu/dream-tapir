@@ -160,7 +160,11 @@ Page({
   onTab(e) {
     const tab = e.currentTarget.dataset.tab;
     if (tab === 'stats') return;
-    const paths = { items: '/pages/inventory/inventory', settings: '/pages/settings/settings' };
+    const paths = {
+      items: '/pages/inventory/inventory',
+      review: '/pages/review/review',
+      settings: '/pages/settings/settings',
+    };
     wx.reLaunch({ url: paths[tab] || paths.items });
   },
 

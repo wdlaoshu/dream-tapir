@@ -60,7 +60,11 @@ Page({
   onTab(e) {
     const tab = e.currentTarget.dataset.tab;
     if (tab === 'settings') return;
-    const paths = { items: '/pages/inventory/inventory', stats: '/pages/statistics/statistics' };
+    const paths = {
+      items: '/pages/inventory/inventory',
+      review: '/pages/review/review',
+      stats: '/pages/statistics/statistics',
+    };
     wx.reLaunch({ url: paths[tab] || paths.items });
   },
 
@@ -185,5 +189,13 @@ Page({
 
   gotoBackup() {
     wx.navigateTo({ url: '/pages/backup/backup' });
+  },
+
+  gotoAISettings() {
+    wx.navigateTo({ url: '/pages/ai-settings/ai-settings' });
+  },
+
+  gotoAIImport() {
+    wx.navigateTo({ url: '/pages/ai-import/ai-import' });
   },
 });

@@ -1,0 +1,42 @@
+<view class="page {{theme}} crop-page">
+  <view wx:if="{{!src}}" class="empty">
+    <view class="empty-emoji">🖼️</view>
+    <view class="empty-title">没有拿到图片</view>
+    <view class="empty-text">请回到编辑页重新选择封面。</view>
+  </view>
+
+  <block wx:if="{{src}}">
+    <view class="crop-hint">拖动图片调整位置，滑杆缩放，方框内就是最终封面。</view>
+
+    <view class="crop-area">
+      <movable-area class="crop-movable-area">
+        <movable-view wx:if="{{ready}}" class="crop-movable-view" direction="all" inertia="{{false}}"
+          x="{{x}}" y="{{y}}" out-of-bounds="{{false}}" bindchange="onMove"
+          style="width:{{imgW}}px;height:{{imgH}}px">
+          <image class="crop-image" src="{{src}}" mode="scaleToFill" />
+        </movable-view>
+      </movable-area>
+      <view class="crop-frame"></view>
+    </view>
+
+    <view class="crop-controls">
+      <text class="crop-control-label">缩放</text>
+      <slider class="crop-slider" min="{{minScale}}" max="{{maxScale}}" step="0.02" value="{{scale}}"
+        activeColor="#0A84FF" bindchange="onScale" />
+      <text class="crop-scale-text">{{scale}}×</text>
+    </view>
+
+    <view class="actions">
+      <button class="btn btn-full" bindtap="reset">复位</button>
+      <button class="btn btn-full" bindtap="saveOriginal">用原图</button>
+    </view>
+    <view class="actions">
+      <button class="btn btn-accent btn-full" bindtap="save" disabled="{{saving}}">保存封面</button>
+    </view>
+
+    <view class="hint">输出 1024×1024 PNG，存在本机小程序目录里；导出备份时会以 data URL 内嵌。</view>
+  </block>
+
+  <!-- 离屏画布：只用来导出，不参与布局 -->
+  <canvas canvas-id="cropCanvas" class="crop-canvas"></canvas>
+</view>

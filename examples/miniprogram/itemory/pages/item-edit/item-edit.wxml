@@ -1,4 +1,12 @@
 <view class="page {{theme}}">
+  <view wx:if="{{sourceNotice}}" class="callout info">
+    <view class="callout-title">AI 识图草稿</view>
+    <view class="callout-text">{{sourceNotice}}</view>
+    <view wx:if="{{priceNeedsConfirmation}}" class="callout-text warn-text">金额归属/币种未明确为单件人民币，请确认后再保存。</view>
+    <view wx:if="{{dateNeedsConfirmation}}" class="callout-text warn-text">没识别到购入日期，默认填了今天。</view>
+    <view wx:if="{{categoryHint}}" class="callout-text">模型建议的分类：{{categoryHint}}</view>
+  </view>
+
   <view class="form">
     <view class="field">
       <view class="field-label">物品名称</view>

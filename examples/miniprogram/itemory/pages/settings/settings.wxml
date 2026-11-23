@@ -54,6 +54,25 @@
     </view>
   </view>
 
+  <!-- AI -->
+  <view class="group">
+    <view class="group-head"><text class="group-title">AI</text></view>
+    <view class="row" bindtap="gotoAISettings">
+      <view class="row-main">
+        <view class="row-title">AI 服务</view>
+        <view class="row-sub">接口地址、API Key、模型与提示词；Key 可选口令加密</view>
+      </view>
+      <view class="row-chevron"></view>
+    </view>
+    <view class="row" bindtap="gotoAIImport">
+      <view class="row-main">
+        <view class="row-title">识图录入</view>
+        <view class="row-sub">从订单截图预填物品信息（需先配置 AI 服务）</view>
+      </view>
+      <view class="row-chevron"></view>
+    </view>
+  </view>
+
   <!-- 数据 -->
   <view class="group">
     <view class="group-head"><text class="group-title">数据</text></view>

@@ -1,0 +1,63 @@
+<import src="../../templates/tabbar.wxml" />
+
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-row">
+      <view>
+        <view class="hero-title">回顾</view>
+        <view class="hero-sub">{{totalCount}} 件物品 · {{direction === 'desc' ? '从近到远' : '从远到近'}}</view>
+      </view>
+      <view class="hero-actions">
+        <view class="btn btn-round" bindtap="toggleDirection">{{direction === 'desc' ? '↓' : '↑'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view class="year-bar" scroll-x>
+    <view class="chip {{year === 'all' ? 'on' : ''}}" data-year="all" bindtap="pickYear">全部年份</view>
+    <view wx:for="{{years}}" wx:key="*this" class="chip {{year === item ? 'on' : ''}}"
+      data-year="{{item}}" bindtap="pickYear">{{item}} 年</view>
+  </scroll-view>
+
+  <view wx:if="{{isEmpty}}" class="empty">
+    <view class="empty-emoji">🗂️</view>
+    <view class="empty-title">还没有可回顾的物品</view>
+    <view class="empty-text">记下第一件物品，之后就能按月、按年翻回去看它陪了你多久。</view>
+    <view class="empty-action">
+      <button class="btn btn-accent" bindtap="addItem">添加第一件物品</button>
+    </view>
+  </view>
+
+  <view wx:if="{{!isEmpty && !rows.length}}" class="empty">
+    <view class="empty-emoji">🔍</view>
+    <view class="empty-title">这一年没有物品</view>
+    <view class="empty-text">换个年份看看。</view>
+  </view>
+
+  <block wx:for="{{rows}}" wx:key="id">
+    <view wx:if="{{item.yearHead}}" class="year-head">
+      <text class="year-head-text">{{item.year}}</text>
+    </view>
+
+    <view class="review-row" data-id="{{item.id}}" bindtap="openItem">
+      <view class="review-date">
+        <text class="review-day">{{item.day}}</text>
+        <text class="review-month">{{item.month}}</text>
+      </view>
+      <view class="review-thumb">
+        <image wx:if="{{item.coverPath}}" class="review-cover" src="{{item.coverPath}}" mode="aspectFill" />
+        <text wx:else class="review-emoji">{{item.emoji}}</text>
+      </view>
+      <view class="review-main">
+        <view class="review-name">{{item.name}}</view>
+        <view wx:if="{{item.subtitle}}" class="review-sub">{{item.subtitle}}</view>
+      </view>
+      <view wx:if="{{item.exited}}" class="review-exit-dot" style="background:{{item.statusColor}}"></view>
+      <view class="row-chevron"></view>
+    </view>
+  </block>
+
+  <view wx:if="{{rows.length}}" class="hint">点任意一件回到物品详情，可以继续记流水或修改信息。</view>
+
+  <template is="tabbar" data="{{active}}" />
+</view>

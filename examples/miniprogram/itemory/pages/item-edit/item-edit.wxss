@@ -50,3 +50,14 @@
 }
 
 button::after { border: none; }
+
+.callout {
+  margin: 24rpx 24rpx 0;
+  padding: 22rpx 26rpx;
+  border-radius: 22rpx;
+  background: var(--panel);
+  border-left: 8rpx solid var(--accent);
+}
+
+.callout-title { font-size: 28rpx; font-weight: 600; color: var(--ink); }
+.callout-text { margin-top: 8rpx; font-size: 24rpx; color: var(--ink-2); line-height: 1.55; }

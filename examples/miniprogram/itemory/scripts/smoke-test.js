@@ -37,7 +37,7 @@ global.wx = {
   showToast({ title }) { lastToast = title; toasts.push(title); },
   showModal(options) {
     lastModal = options;
-    if (options && options.success) options.success({ confirm: modalAnswer, cancel: !modalAnswer });
+    if (options && options.success) options.success({ confirm: modalAnswer, cancel: !modalAnswer, content: modalContent });
   },
   showActionSheet(options) { if (options && options.success) options.success({ tapIndex: 0 }); },
   showLoading() {},
@@ -45,8 +45,51 @@ global.wx = {
   navigateTo({ url }) { navLog.push(url); },
   navigateBack() { navLog.push('back'); },
   reLaunch({ url }) { navLog.push(url); },
-  chooseImage({ success }) { success && success({ tempFilePaths: ['difile://tmp/pick.png'] }); },
+  chooseImage({ success }) {
+    files.set('difile://tmp/pick.png', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]));
+    success && success({ tempFilePaths: ['difile://tmp/pick.png'] });
+  },
   previewImage({ success }) { success && success(); },
+  getImageInfo({ success }) { success && success({ width: 800, height: 600 }); },
+  createCanvasContext() {
+    const ctx = {
+      drawImage() {},
+      draw(next, cb) { cb && cb(); },
+    };
+    return ctx;
+  },
+  canvasToTempFilePath({ success }) { success && success({ tempFilePath: 'difile://tmp/cropped.png' }); },
+  createSelectorQuery() {
+    return {
+      select() {
+        return {
+          boundingClientRect(cb) { if (cb) cb({ width: 300, height: 300 }); return this; },
+        };
+      },
+      exec() {},
+    };
+  },
+  request(options) {
+    const url = String(options.url || '');
+    aiCalls.push({ url, method: options.method || 'GET', header: options.header || {}, data: options.data });
+    setTimeout(() => {
+      if (/\/models$/.test(url)) {
+        return options.success({ statusCode: 200, data: { data: [{ id: 'gpt-4.1-mini' }, { id: 'o4-mini' }] } });
+      }
+      if (/\/chat\/completions$|\/responses$/.test(url)) {
+        const body = typeof options.data === 'string' ? JSON.parse(options.data) : (options.data || {});
+        if (aiRejectJson && (body.response_format || (body.text && body.text.format))) {
+          return options.success({
+            statusCode: 400,
+            data: { error: { code: 'unsupported_parameter', message: 'response_format is not supported' } },
+          });
+        }
+        const payload = { choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(AI_ANSWER) } }] };
+        return options.success({ statusCode: 200, data: payload });
+      }
+      return options.success({ statusCode: 404, data: {} });
+    }, 0);
+  },
   getFileSystemManager() {
     return {
       stat({ path, success, fail }) {
@@ -79,11 +122,32 @@ global.wx = {
 };
 
 let appPrefs = {};
-global.getApp = () => ({
-  globalData: { prefs: appPrefs },
+const appObject = {
+  globalData: { prefs: appPrefs, aiItemDraft: null, coverCropResult: null },
   ready: () => Promise.resolve({ prefs: appPrefs }),
-  setPrefs: patch => { appPrefs = Object.assign({}, appPrefs, patch); return Promise.resolve(appPrefs); },
-});
+  setPrefs: patch => { appPrefs = Object.assign({}, appPrefs, patch); appObject.globalData.prefs = appPrefs; return Promise.resolve(appPrefs); },
+};
+global.getApp = () => appObject;
+
+/* 假的 OpenAI 兼容服务：用来验证请求形状与降级重试 */
+let aiRejectJson = false;
+const aiCalls = [];
+const AI_ANSWER = {
+  name: 'Sony WH-1000XM5',
+  categoryHint: '数码电子',
+  price: 1899.5,
+  acquiredOn: '2025-11-02',
+  channel: '京东',
+  warrantyUntil: '2027-11-02',
+  imageType: 'order_receipt',
+  notes: '黑色；订单编号 123456；收件人 张三；商品全新',
+  targetStatus: 'single',
+  priceScope: 'item',
+  currency: 'CNY',
+  itemCount: 1,
+};
+
+let modalContent = '';
 
 /* ---------- 断言工具 ---------- */
 
@@ -129,6 +193,8 @@ const store = require('./../utils/store.js');
 const V = require('./../utils/view.js');
 const Stats = require('./../utils/statistics.js');
 const covers = require('./../utils/covers.js');
+const ai = require('./../utils/ai.js');
+const secret = require('./../utils/secret.js');
 
 /* ---------- 页面实例化 ---------- */
 
@@ -627,6 +693,297 @@ async function main() {
     lastToast = '';
     await page.doImport();
     assert(lastToast.indexOf('JSON') >= 0 || lastToast.indexOf('Unexpected') >= 0 || lastToast.length > 0, '给出错误提示');
+  });
+
+  /* 9b. AI 协议层 */
+  await check('接口地址规范化', () => {
+    eq(ai.resolveRoot('https://api.openai.com/v1'), 'https://api.openai.com/v1', '根地址保持');
+    eq(ai.resolveRoot('https://api.openai.com/v1/chat/completions'), 'https://api.openai.com/v1', '去掉端点后缀');
+    eq(ai.resolveRoot('https://relay.example.com'), 'https://relay.example.com/v1', '补 /v1');
+    let threw = false;
+    try { ai.resolveRoot('http://api.openai.com/v1'); } catch (e) { threw = true; }
+    assert(threw, 'HTTP 应被拒绝');
+    threw = false;
+    try { ai.resolveRoot('https://api.openai.com/v1?x=1'); } catch (e) { threw = true; }
+    assert(threw, '查询参数应被拒绝');
+  });
+
+  await check('模型列表解析', () => {
+    eq(ai.parseModelIds({ data: [{ id: 'b' }, { id: 'a' }, { id: 'a' }] }).join(','), 'a,b', '去重排序');
+    let threw = false;
+    try { ai.parseModelIds({ nope: 1 }); } catch (e) { threw = true; }
+    assert(threw, '非兼容格式应报错');
+  });
+
+  await check('提示词包含分类与输出契约', () => {
+    const prompt = ai.buildPrompt(['"数码电子"', '"家具家居"']);
+    assert(prompt.indexOf('"数码电子"') >= 0, '分类注入');
+    assert(prompt.indexOf('Mandatory output contract') >= 0, '契约固定追加');
+    const custom = ai.buildPrompt(['"X"'], '只看{{categories}}');
+    assert(custom.indexOf('只看"X"') >= 0, '自定义模板替换占位');
+    assert(custom.indexOf('Mandatory output contract') >= 0, '自定义模板也保留契约');
+  });
+
+  await check('识别结果解析：隐私过滤与金额归属', () => {
+    const parsed = ai.parseExtraction(AI_ANSWER);
+    eq(parsed.name, 'Sony WH-1000XM5', '名称');
+    eq(parsed.price, 1899.5, '金额');
+    eq(parsed.currency, 'CNY', '币种');
+    assert(!/订单编号|张三/.test(parsed.notes || ''), '备注里的订单号与姓名应被过滤');
+    assert(parsed.warnings.some(w => w.indexOf('个人信息') >= 0), '应提示已过滤');
+
+    const orderTotal = ai.parseExtraction(Object.assign({}, AI_ANSWER, { priceScope: 'order', price: 999 }));
+    eq(orderTotal.price, null, '订单总额不能当成单件价格');
+
+    const legacy = ai.parseExtraction({
+      name: '旧格式物品', price: 88, categoryHint: null, acquiredOn: null,
+      channel: null, warrantyUntil: null, imageType: 'physical_item', notes: null,
+    });
+    eq(legacy.priceNeedsConfirmation, true, '旧格式金额需要确认');
+
+    let threw = false;
+    try {
+      ai.parseExtraction(Object.assign({}, AI_ANSWER, { targetStatus: 'ambiguous', itemCount: 3 }));
+    } catch (e) { threw = true; }
+    assert(threw, '多候选物品应被拒绝');
+  });
+
+  await check('不支持参数分类', () => {
+    const text = JSON.stringify({ error: { code: 'unsupported_parameter', param: 'response_format', message: 'x' } });
+    eq(ai.classifyUnsupportedParameter(400, text), 'json', 'response_format');
+    eq(ai.classifyUnsupportedParameter(400, JSON.stringify({ error: { message: 'temperature is not supported' } })), 'temperature', 'temperature');
+    eq(ai.classifyUnsupportedParameter(500, text), null, '非 400/422 不重试');
+  });
+
+  await check('识图请求形状与降级重试', async () => {
+    aiCalls.length = 0;
+    aiRejectJson = false;
+    const outcome = await ai.extractItemFromImage({
+      baseURL: 'https://api.example.com/v1',
+      apiKey: 'sk-test',
+      model: 'gpt-4.1-mini',
+      endpointKind: 'chat_completions',
+      candidateCategories: ['"数码电子"'],
+      imageDataUrl: 'data:image/png;base64,iVBORw==',
+    });
+    eq(aiCalls.length, 1, '一次请求');
+    assert(aiCalls[0].url === 'https://api.example.com/v1/chat/completions', '端点');
+    eq(aiCalls[0].header.Authorization, 'Bearer sk-test', '鉴权头');
+    eq(aiCalls[0].data.response_format.type, 'json_object', '带响应格式');
+    eq(aiCalls[0].data.temperature, 0, '温度');
+    eq(outcome.extraction.name, 'Sony WH-1000XM5', '解析结果');
+    eq(outcome.attempts.length, 1, '尝试次数');
+
+    aiCalls.length = 0;
+    aiRejectJson = true;
+    const retried = await ai.extractItemFromImage({
+      baseURL: 'https://api.example.com/v1',
+      apiKey: 'sk-test',
+      model: 'gpt-4.1-mini',
+      imageDataUrl: 'data:image/png;base64,iVBORw==',
+    });
+    eq(aiCalls.length, 2, '拒绝 response_format 后重试一次');
+    assert(!aiCalls[1].data.response_format, '第二次不带 response_format');
+    eq(retried.attempts[0].removed, 'json', '记录被去掉的参数');
+    eq(retried.extraction.name, 'Sony WH-1000XM5', '重试后成功');
+    aiRejectJson = false;
+  });
+
+  await check('密钥：明文与口令加密', async () => {
+    await secret.clearKey();
+    eq(await secret.currentKey(), '', '清空后没有 Key');
+    await secret.saveKey('sk-plain-12345678', null);
+    eq(await secret.currentKey(), 'sk-plain-12345678', '明文模式可直接读');
+    eq(secret.maskKey('sk-plain-12345678'), 'sk-••••5678', '掩码');
+    eq(await secret.isSealed(), false, '不是加密模式');
+
+    await secret.saveKey('sk-sealed-abcdefgh', 'p@ssw0rd');
+    secret.lock();
+    eq(await secret.currentKey(), '', '加密模式冷启动拿到空');
+    eq(await secret.isSealed(), true, '标记为加密');
+    eq(await secret.unlockKey('wrong'), false, '错误口令解不开');
+    eq(await secret.unlockKey('p@ssw0rd'), true, '正确口令解开');
+    eq(await secret.currentKey(), 'sk-sealed-abcdefgh', '解出原文');
+
+    /* 解锁后不需要再问口令 */
+    eq(await secret.needsUnlock(), false, '已解锁时不需要再问');
+
+    await secret.clearKey();
+    eq(await secret.hasKey(), false, '清除生效');
+  });
+
+  /* 9c. 二期页面 */
+  await check('AI 设置页：保存配置与拉取模型', async () => {
+    const page = loadPage('pages/ai-settings/ai-settings.js');
+    await page.onLoad();
+    eq(page.data.enabled, false, '默认关闭');
+
+    page.pickConsent({ detail: { value: true } });
+    page.onEnabled({ detail: { value: true } });
+    page.onBaseURL({ detail: { value: 'https://api.example.com/v1' } });
+    page.pickEndpoint({ currentTarget: { dataset: { kind: 'responses' } } });
+    page.pickEffort({ currentTarget: { dataset: { effort: 'high' } } });
+    page.onModel({ detail: { value: 'gpt-4.1-mini' } });
+    await page.saveProfile();
+
+    const profile = await ai.readProfile();
+    eq(profile.baseURL, 'https://api.example.com/v1', '地址已存');
+    eq(profile.endpointKind, 'responses', '接口形态');
+    eq(profile.reasoningEffort, 'high', '推理强度');
+    eq(profile.model, 'gpt-4.1-mini', '模型');
+    assert(profile.consentAt, '记录同意时间');
+
+    await secret.saveKey('sk-page-12345678', null);
+    await page.refreshModels();
+    eq(page.data.modelOptions.length, 2, '拉到两个模型');
+    eq(page.data.model, 'gpt-4.1-mini', '保留原选择');
+  });
+
+  await check('AI 设置：加密 Key 走页内口令解锁', async () => {
+    await secret.clearKey();
+    await secret.saveKey('sk-sealed-page-9999', 'page-pass');
+    secret.lock();
+    const page = loadPage('pages/ai-settings/ai-settings.js');
+    await page.onLoad();
+    eq(page.data.keySaved, true, '显示已保存');
+    eq(page.data.keySealed, true, '标记加密');
+    await page.refreshModels();
+    eq(page.data.unlockOpen, true, '打开口令面板');
+    page.onUnlockInput({ detail: { value: 'bad' } });
+    lastToast = '';
+    await page.submitUnlock();
+    eq(lastToast, '口令不对', '错误口令有提示');
+    eq(page.data.unlockOpen, true, '面板不关');
+
+    page.onUnlockInput({ detail: { value: 'page-pass' } });
+    await page.submitUnlock();
+    eq(page.data.unlockOpen, false, '解锁后面板关闭');
+    eq(page.data.modelOptions.length, 2, '继续完成了拉取');
+  });
+
+  await check('AI 设置：不勾选说明不能启用', async () => {
+    const page = loadPage('pages/ai-settings/ai-settings.js');
+    await page.onLoad();
+    page.pickConsent({ detail: { value: false } });
+    page.setData({ enabled: false });
+    lastToast = '';
+    page.onEnabled({ detail: { value: true } });
+    eq(lastToast, '先阅读并勾选数据外发说明', '拦住未同意');
+    eq(page.data.enabled, false, '没有真的打开');
+  });
+
+  await check('识图录入页：识别 → 草稿带进编辑', async () => {
+    await store.reset();
+    await secret.saveKey('sk-page-12345678', null);
+    const page = loadPage('pages/ai-import/ai-import.js');
+    await page.onShow();
+    eq(page.data.configured, true, '配置就绪');
+    eq(page.data.canPick, true, '可以选图');
+
+    await page.choose();
+    eq(page.data.busy, false, '识别结束');
+    eq(page.data.error, '', '没有错误');
+    assert(page.data.result, '有结果');
+    eq(page.data.result.name, 'Sony WH-1000XM5', '结果名称');
+    eq(page.data.result.priceText, '1899.50', '金额写成元');
+    eq(page.data.result.categoryName, '数码电子', '分类建议匹配到现有分类');
+    assert(page.data.warnings.length >= 1, '有核对提示');
+
+    appObject.globalData.aiItemDraft = null;
+    navLog = [];
+    page.toEditor();
+    assert(appObject.globalData.aiItemDraft, '草稿放进 globalData');
+    eq(navLog[0], '/pages/item-edit/item-edit', '跳编辑页');
+  });
+
+  await check('编辑页：AI 草稿预填', async () => {
+    const page = loadPage('pages/item-edit/item-edit.js');
+    await page.onLoad({});
+    eq(page.data.name, 'Sony WH-1000XM5', '名称预填');
+    eq(page.data.priceText, '1899.50', '价格预填');
+    eq(page.data.acquiredOn, '2025-11-02', '日期预填');
+    eq(page.data.categoryId, 'digital', '分类预填');
+    eq(page.data.channel, '京东', '渠道预填');
+    assert(page.data.sourceNotice.indexOf('AI') >= 0, '来源提示');
+    eq(appObject.globalData.aiItemDraft, null, '草稿只消费一次');
+  });
+
+  await check('回顾页：年份筛选与顺序', async () => {
+    await store.reset();
+    const a = await store.saveItem({ name: '2023 的物品', categoryId: 'digital', acquiredOn: '2023-05-06', acquisitionAmountMinor: 100 });
+    const b = await store.saveItem({ name: '2025 的物品', acquiredOn: '2025-01-02', acquisitionAmountMinor: 200, channel: '官网' });
+    const page = loadPage('pages/review/review.js');
+    await page.onShow();
+    eq(page.data.totalCount, 2, '全部件数');
+    eq(page.data.years.join(','), '2025,2023', '年份倒序');
+    eq(page.data.rows[0].name, '2025 的物品', '默认从近到远');
+    eq(page.data.rows[0].subtitle, '¥2 · 官网', '副标题价格与渠道');
+    page.toggleDirection();
+    eq(page.data.rows[0].name, '2023 的物品', '切换后从远到近');
+    page.pickYear({ currentTarget: { dataset: { year: '2025' } } });
+    eq(page.data.totalCount, 1, '年份筛选');
+    navLog = [];
+    page.openItem({ currentTarget: { dataset: { id: b.id } } });
+    eq(navLog[0], `/pages/item/item?id=${b.id}`, '跳详情');
+    await store.deleteItem(a.id);
+    await store.deleteItem(b.id);
+  });
+
+  await check('回顾页：年分组头只在换年时出现', async () => {
+    await store.reset();
+    await store.saveItem({ name: 'A', acquiredOn: '2024-03-01', acquisitionAmountMinor: 100 });
+    await store.saveItem({ name: 'B', acquiredOn: '2024-08-01', acquisitionAmountMinor: 100 });
+    await store.saveItem({ name: 'C', acquiredOn: '2023-01-01', acquisitionAmountMinor: 100 });
+    const page = loadPage('pages/review/review.js');
+    await page.onShow();
+    const heads = page.data.rows.filter(r => r.yearHead).map(r => r.year);
+    eq(heads.length, 2, '两个年份分组头');
+    eq(heads.join(','), '2024,2023', '分组顺序');
+  });
+
+  await check('封面裁剪页：拖拽缩放并导出封面', async () => {
+    const page = loadPage('pages/cover-crop/cover-crop.js');
+    page.onLoad({ src: encodeURIComponent('difile://tmp/pick.png') });
+    eq(page.data.theme, 'theme-auto', '主题');
+    await page.onReady();
+    eq(page.data.ready, true, '初始化完成');
+    eq(page.data.areaSize, 300, '区域宽度');
+    eq(page.data.baseW, 400, '800×600 cover 到 300 正方形 → 宽 400');
+    eq(page.data.baseH, 300, '高正好铺满');
+
+    page.onScale({ detail: { value: 2 } });
+    eq(page.data.imgW, 800, '放大两倍');
+    assert(page.data.x <= 0 && page.data.y <= 0, '缩放后仍在框内');
+
+    appObject.globalData.coverCropResult = null;
+    navLog = [];
+    await page.save();
+    assert(appObject.globalData.coverCropResult, '裁剪结果放回 globalData');
+    eq(navLog[0], 'back', '保存后返回');
+    const asset = store.findAsset(appObject.globalData.coverCropResult.assetId);
+    assert(asset, '封面资源已登记');
+  });
+
+  await check('编辑页：接收裁剪结果并替换旧封面', async () => {
+    const pending = appObject.globalData.coverCropResult;
+    assert(pending, '上一步留下了待接收的裁剪结果');
+    const oldAsset = await covers.persistFromTemp('difile://tmp/old.png');
+    await store.registerAsset(oldAsset);
+    const page = loadPage('pages/item-edit/item-edit.js');
+    await page.onLoad({});
+    page.setData({ coverAssetId: oldAsset.id, coverPath: oldAsset.path });
+    await page.onShow();
+    eq(page.data.coverAssetId, pending.assetId, '封面已替换');
+    assert(page.data.coverPath.indexOf('covers/') >= 0, '新封面路径');
+    eq(appObject.globalData.coverCropResult, null, '结果只消费一次');
+    assert(store.findAsset(oldAsset.id), '取消前旧封面不能被删');
+
+    /* 保存后才清理旧封面 */
+    page.onName({ detail: { value: '封面物品' } });
+    navLog = [];
+    await page.save();
+    eq(navLog[0], 'back', '保存返回');
+    eq(store.findAsset(oldAsset.id), null, '保存后旧封面记录已清理');
   });
 
   /* 10. 静态检查：WXML 闭合与事件处理函数 */

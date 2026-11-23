@@ -1,0 +1,91 @@
+/* 封面裁剪 */
+
+.crop-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.crop-hint {
+  padding: 20rpx 40rpx 0;
+  font-size: 24rpx;
+  color: var(--ink-2);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.crop-area {
+  position: relative;
+  width: 600rpx;
+  height: 600rpx;
+  margin: 24rpx auto 0;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: var(--panel-2);
+}
+
+.crop-movable-area {
+  width: 600rpx;
+  height: 600rpx;
+}
+
+.crop-movable-view {
+  width: 100%;
+  height: 100%;
+}
+
+.crop-image {
+  width: 100%;
+  height: 100%;
+}
+
+.crop-frame {
+  position: absolute;
+  inset: 0;
+  border: 2rpx dashed rgba(255, 255, 255, 0.55);
+  border-radius: 24rpx;
+  pointer-events: none;
+}
+
+.crop-controls {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  width: 640rpx;
+  margin: 28rpx auto 0;
+}
+
+.crop-control-label {
+  font-size: 24rpx;
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+
+.crop-slider { flex: 1; }
+
+.crop-scale-text {
+  font-size: 24rpx;
+  color: var(--ink-2);
+  width: 80rpx;
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  gap: 16rpx;
+  width: 640rpx;
+  margin: 20rpx auto 0;
+}
+
+.actions button { flex: 1; }
+
+/* 离屏画布：只用于导出，不显示 */
+.crop-canvas {
+  position: fixed;
+  left: -2000px;
+  top: 0;
+  width: 1024px;
+  height: 1024px;
+}
+
+button::after { border: none; }

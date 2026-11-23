@@ -7,6 +7,10 @@
     "pages/exit-edit/exit-edit",
     "pages/statistics/statistics",
     "pages/settings/settings",
+    "pages/review/review",
+    "pages/ai-settings/ai-settings",
+    "pages/ai-import/ai-import",
+    "pages/cover-crop/cover-crop",
     "pages/backup/backup"
   ],
   "window": {

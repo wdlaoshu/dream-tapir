@@ -9,6 +9,7 @@ const app = getApp();
 
 const TAB_PATHS = {
   items: '/pages/inventory/inventory',
+  review: '/pages/review/review',
   stats: '/pages/statistics/statistics',
   settings: '/pages/settings/settings',
 };

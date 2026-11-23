@@ -38,6 +38,10 @@ Page({
     iconOpen: false,
     nameMax: NAME_MAX_LENGTH,
     canPickImage: false,
+    sourceNotice: '',
+    priceNeedsConfirmation: false,
+    dateNeedsConfirmation: false,
+    categoryHint: '',
   },
 
   async onLoad(query) {
@@ -65,6 +69,31 @@ Page({
       selectedTagIds,
     });
 
+    if (!itemId) {
+      /* AI 识图录入带过来的草稿：只预填，保存仍走本页校验 */
+      const draft = app.globalData.aiItemDraft;
+      if (draft) {
+        app.globalData.aiItemDraft = null;
+        this.setData({
+          name: draft.name || '',
+          categoryId: draft.categoryId || '',
+          priceText: draft.priceText || '',
+          acquiredOn: draft.purchasedOn || todayYmd(),
+          channel: draft.channel || '',
+          warrantyEnabled: Boolean(draft.warrantyUntil),
+          warrantyUntil: draft.warrantyUntil || '',
+          notes: draft.notes || '',
+          sourceNotice: draft.sourceNotice || '',
+          priceNeedsConfirmation: Boolean(draft.priceNeedsConfirmation),
+          dateNeedsConfirmation: Boolean(draft.dateNeedsConfirmation),
+        });
+        const hint = draft.categoryHint || '';
+        if (!draft.categoryId && hint) {
+          this.setData({ categoryHint: hint });
+        }
+      }
+    }
+
     if (itemId) {
       const detail = require('../../utils/view.js').buildDetail(state, itemId);
       if (!detail) {
@@ -88,6 +117,18 @@ Page({
         notes: item.notes || '',
         selectedTagIds,
       });
+    }
+  },
+
+  async onShow() {
+    await this.takeCropResult();
+  },
+
+  onUnload() {
+    /* 没保存就离开：把本次新建的封面文件清掉，别留下孤儿文件 */
+    if (this.saved) return;
+    for (const id of this.createdAssetIds || []) {
+      store.dropAsset(id).catch(() => {});
     }
   },
 
@@ -153,21 +194,36 @@ Page({
       return;
     }
     try {
-      const asset = await covers.pickCover();
-      const previous = this.data.coverAssetId;
-      await store.registerAsset(asset);
-      if (previous) await store.dropAsset(previous);
-      this.setData({ coverAssetId: asset.id, coverPath: asset.path });
-      wx.showToast({ title: '封面已设置', icon: 'none' });
+      const tempPath = await covers.chooseTempImage();
+      /* 交给裁剪页处理；裁剪页保存后把结果放在 globalData 里带回 */
+      wx.navigateTo({ url: `/pages/cover-crop/cover-crop?src=${encodeURIComponent(tempPath)}` });
     } catch (err) {
       wx.showToast({ title: err.message || '选图失败', icon: 'none' });
     }
   },
 
+  /* 从裁剪页回来：先换上，旧封面的文件等保存成功后再删（取消编辑不该丢数据） */
+  async takeCropResult() {
+    const result = app.globalData.coverCropResult;
+    if (!result) return;
+    app.globalData.coverCropResult = null;
+    this.createdAssetIds = this.createdAssetIds || [];
+    if (this.createdAssetIds.indexOf(result.assetId) < 0) this.createdAssetIds.push(result.assetId);
+    const previous = this.data.coverAssetId;
+    this.pendingDropIds = this.pendingDropIds || [];
+    if (previous && previous !== result.assetId && this.pendingDropIds.indexOf(previous) < 0) {
+      this.pendingDropIds.push(previous);
+    }
+    this.setData({ coverAssetId: result.assetId, coverPath: result.path });
+  },
+
   async removeCover() {
     const previous = this.data.coverAssetId;
     this.setData({ coverAssetId: '', coverPath: '' });
-    if (previous) await store.dropAsset(previous);
+    if (!previous) return;
+    /* 同样是「保存后才删」，避免取消编辑把原封面也删掉 */
+    this.pendingDropIds = this.pendingDropIds || [];
+    if (this.pendingDropIds.indexOf(previous) < 0) this.pendingDropIds.push(previous);
   },
 
   async save() {
@@ -214,6 +270,11 @@ Page({
         notes: this.data.notes.trim() || null,
       });
       await store.setItemTags(record.id, this.data.selectedTagIds);
+      this.saved = true;
+      /* 保存成功后清掉被替换的旧封面记录与文件 */
+      for (const id of this.pendingDropIds || []) {
+        if (id && id !== record.coverAssetId) await store.dropAsset(id);
+      }
       wx.navigateBack();
     } catch (err) {
       wx.showToast({ title: err.message || '保存失败', icon: 'none' });

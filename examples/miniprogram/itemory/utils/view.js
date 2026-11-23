@@ -247,6 +247,70 @@ function buildOverview(state) {
   };
 }
 
+/* ---------- 回顾（按购入时间浏览） ---------- */
+
+function reviewYears(state) {
+  const set = new Set();
+  for (const item of state.items || []) {
+    if (typeof item.acquiredOn === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.acquiredOn)) {
+      set.add(item.acquiredOn.slice(0, 4));
+    }
+  }
+  return Array.from(set).sort().reverse();
+}
+
+/**
+ * 回顾列表：不分页，直接按年份筛选 + 购入日期排序，并在跨年处标记分组头。
+ * 副标题口径与桌面版 reviewItemSubtitle 一致。
+ */
+function buildReview(state, query) {
+  const q = Object.assign({ year: 'all', direction: 'desc' }, query || {});
+  const categoryById = new Map((state.categories || []).map(c => [c.id, c]));
+  const exitByItem = new Map((state.exits || []).map(e => [e.itemId, e]));
+  const years = reviewYears(state);
+  const items = (state.items || []).filter(item =>
+    q.year === 'all' || (typeof item.acquiredOn === 'string' && item.acquiredOn.slice(0, 4) === q.year)
+  );
+  const dir = q.direction === 'asc' ? 1 : -1;
+  items.sort((a, b) => {
+    if (a.acquiredOn !== b.acquiredOn) return a.acquiredOn < b.acquiredOn ? -dir : dir;
+    return String(a.id) < String(b.id) ? -dir : dir;
+  });
+
+  const rows = [];
+  let lastYear = '';
+  for (const item of items) {
+    const exit = exitByItem.get(item.id) || null;
+    const category = item.categoryId ? (categoryById.get(item.categoryId) || null) : null;
+    const parts = item.acquiredOn.split('-');
+    const price = item.acquisitionAmountMinor === null ? '' : money(item.acquisitionAmountMinor, true);
+    let subtitle = '';
+    if (exit) {
+      const exitLabel = EXIT_REASON_LABELS[exit.reason] || '结束持有';
+      subtitle = [price, `${dateText(exit.exitedOn)}${exitLabel}`].filter(Boolean).join(' · ');
+    } else {
+      const channel = item.channel ? String(item.channel).trim() : '';
+      subtitle = price && channel ? `${price} · ${channel}` : (price || channel);
+    }
+    const year = parts[0] || '';
+    rows.push({
+      id: item.id,
+      name: item.name,
+      emoji: itemEmoji(item, category),
+      coverPath: coverPathOf(state, item),
+      day: parts[2] || '',
+      month: parts[1] ? `${parts[1]}月` : '',
+      year,
+      yearHead: year !== lastYear,
+      subtitle,
+      exited: Boolean(exit),
+      statusColor: exit ? (ITEM_STATUS_META[exit.reason] || {}).color || '#8E8E93' : '',
+    });
+    lastYear = year;
+  }
+  return { rows, years, totalCount: items.length };
+}
+
 module.exports = {
   SORT_FIELDS,
   analyses,
@@ -255,6 +319,8 @@ module.exports = {
   buildCards,
   buildDetail,
   buildOverview,
+  buildReview,
+  reviewYears,
   money,
   signedMoney,
   daysText,

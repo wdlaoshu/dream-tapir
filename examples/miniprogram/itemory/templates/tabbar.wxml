@@ -6,6 +6,10 @@
       <text class="tab-emoji">📦</text>
       <text>物品</text>
     </view>
+    <view class="tab {{active === 'review' ? 'on' : ''}}" data-tab="review" bindtap="onTab">
+      <text class="tab-emoji">🗂️</text>
+      <text>回顾</text>
+    </view>
     <view class="tab {{active === 'stats' ? 'on' : ''}}" data-tab="stats" bindtap="onTab">
       <text class="tab-emoji">📊</text>
       <text>统计</text>

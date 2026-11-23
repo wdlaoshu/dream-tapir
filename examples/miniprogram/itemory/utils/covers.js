@@ -136,6 +136,23 @@ async function pruneCovers(assets) {
 
 /* ---------- 选图 ---------- */
 
+/* 只选图、不落盘：给裁剪页当输入 */
+async function chooseTempImage() {
+  if (!canPickImage()) throw new Error('当前平台不支持选择图片');
+  const chosen = await new Promise((resolve, reject) => {
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: resolve,
+      fail: err => reject(new Error((err && err.errMsg) || '没有选择图片')),
+    });
+  });
+  const tempFilePath = (chosen.tempFilePaths || [])[0];
+  if (!tempFilePath) throw new Error('没有选择图片');
+  return tempFilePath;
+}
+
 function canPickImage() {
   return typeof wx.chooseImage === 'function';
 }
@@ -179,6 +196,24 @@ async function pickCover() {
   };
 }
 
+/* 把一个临时文件持久化成封面资源（裁剪页与直接选图都用它） */
+async function persistFromTemp(tempPath, byteSize) {
+  if (!tempPath) throw new Error('没有可保存的图片');
+  await ensureDir();
+  const id = `cover_${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
+  const target = coverPath(id);
+  const saved = await call(fs().saveFile, { tempFilePath: tempPath, filePath: target });
+  const path = (saved && saved.savedFilePath) || target;
+  let size = byteSize || 0;
+  if (!size) {
+    try {
+      const info = await call(fs().stat, { path });
+      size = (info && info.stats && info.stats.size) || 0;
+    } catch (e) { size = 0; }
+  }
+  return { id, path, mime: 'image/png', byteSize: size, createdAt: Date.now() };
+}
+
 async function fileExists(path) {
   if (!path) return false;
   try {
@@ -202,6 +237,8 @@ module.exports = {
   removeFileIfExists,
   pruneCovers,
   canPickImage,
+  chooseTempImage,
   pickCover,
+  persistFromTemp,
   fileExists,
 };
