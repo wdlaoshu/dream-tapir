@@ -7,7 +7,8 @@
     "pages/identity-edit/identity-edit",
     "pages/account-edit/account-edit",
     "pages/token-edit/token-edit",
-    "pages/backup/backup"
+    "pages/backup/backup",
+    "pages/sync/sync"
   ],
   "window": {
     "navigationBarTitleText": "Toki",

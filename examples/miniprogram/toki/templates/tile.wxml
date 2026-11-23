@@ -1,0 +1,8 @@
+<template name="tile">
+  <view class="tile {{cls}}" style="{{t.bgStyle}}">
+    <image wx:if="{{t.iconSrc}}" class="tile-img" src="{{t.iconSrc}}" mode="aspectFit"></image>
+    <view wx:elif="{{t.favClass}}" class="tile-fav {{t.favClass}}"></view>
+    <view wx:elif="{{t.glyph}}" class="{{t.glyphClass}}" style="{{t.glyphStyle}}"></view>
+    <text wx:else class="tile-letter">{{t.letter}}</text>
+  </view>
+</template>

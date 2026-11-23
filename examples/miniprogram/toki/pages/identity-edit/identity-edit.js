@@ -1,5 +1,6 @@
 const store = require('../../utils/store.js');
 const M = require('../../utils/model.js');
+const V = require('../../utils/view.js');
 const ui = require('../../utils/ui.js');
 
 const app = getApp();
@@ -85,6 +86,13 @@ Page({
       placeholder: field[1],
       colors: palette.map(c => ({ c, on: c === color })),
       viaOptions: [{ id: '', label: '不绑定', sub: '', color: '', on: !this.data.via }].concat(viaOptions),
+      types: M.KINDS.map(k => ({
+        key: k,
+        label: k === 'email' ? '邮箱' : k === 'phone' ? '手机号' : '登录',
+        glyphClass: `ico ico-sm ico-${k}`,
+        on: k === type,
+      })),
+      previewTile: V.identityTile({ type, provider, color }),
       type: type,
     });
   },

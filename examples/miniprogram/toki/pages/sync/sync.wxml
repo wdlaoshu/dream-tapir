@@ -1,0 +1,81 @@
+<view class="page {{theme}} form-page">
+  <view class="form-bar">
+    <view class="form-bar-btn" bindtap="onBack">返回</view>
+    <view class="form-bar-title">加密同步</view>
+    <view class="form-bar-btn"></view>
+  </view>
+
+  <block wx:if="{{on}}">
+    <view class="sync-hero">
+      <view class="ico ico-xl ico-cloud sync-ic"></view>
+      <view class="sync-title">加密同步已开启</view>
+      <view class="sync-state {{statusState}}">{{statusText}}</view>
+    </view>
+
+    <view class="group">
+      <view class="row" bindtap="onSyncNow">
+        <view class="row-main"><view class="row-title row-tint">立即同步</view></view>
+      </view>
+    </view>
+
+    <view class="hint">
+      数据在这台设备上用你的同步密码加密，再存进你 {{providerLabel}} 账号里的一个私密代码片段。
+      平台和任何人都只能看到乱码。另一台设备填同一个令牌和密码就会自动合并。
+    </view>
+
+    <view class="group" style="margin-top:20rpx;">
+      <view class="row" bindtap="onDisable">
+        <view class="row-main"><view class="row-title row-danger">在这台设备上关闭同步</view></view>
+      </view>
+    </view>
+    <view class="hint">关闭只影响这台设备，云端的加密数据和本机数据都会保留。</view>
+  </block>
+
+  <block wx:else>
+    <view class="sync-hero">
+      <view class="ico ico-xl ico-cloud sync-ic"></view>
+      <view class="sync-title">在你的所有设备上同步</view>
+      <view class="sync-sub">端到端加密，只有你的同步密码能解开</view>
+    </view>
+
+    <view class="section-title">存放在哪里</view>
+    <view class="pills">
+      <view class="pill {{provider === 'gitee' ? 'on' : ''}}" data-provider="gitee" bindtap="onProvider">Gitee · 国内直连</view>
+      <view class="pill {{provider === 'github' ? 'on' : ''}}" data-provider="github" bindtap="onProvider">GitHub</view>
+    </view>
+
+    <view class="section-title">{{tokenTitle}}</view>
+    <view class="group">
+      <view class="field">
+        <input
+          class="field-input"
+          value="{{token}}"
+          password="{{true}}"
+          placeholder="{{tokenPh}}"
+          placeholder-class="ph"
+          bindinput="onToken"
+        />
+      </view>
+    </view>
+    <view class="hint">{{tokenHint}}</view>
+
+    <view class="section-title">同步密码</view>
+    <view class="group">
+      <view class="field">
+        <input
+          class="field-input"
+          value="{{pass}}"
+          password="{{true}}"
+          placeholder="至少 8 位，所有设备填同一个"
+          placeholder-class="ph"
+          bindinput="onPass"
+        />
+      </view>
+    </view>
+    <view class="hint">同步密码不会上传，也没法找回。忘了它，云端数据就打不开了，本机数据不受影响。</view>
+
+    <view class="hint progress" wx:if="{{busy}}">{{statusText}}</view>
+    <view class="btn btn-block" style="margin-top:24rpx;" bindtap="onEnable">{{busy ? '连接中…' : '开启同步'}}</view>
+    <view class="hint">开启时会在本机做 31 万次 PBKDF2 迭代，手机慢的话要等几秒。</view>
+  </block>
+</view>

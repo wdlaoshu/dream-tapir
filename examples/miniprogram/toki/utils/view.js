@@ -1,19 +1,77 @@
 /* Toki 小程序 · 视图模型
-   把 state 变成 WXML 能直接渲染的数组，页面里不再拼字符串。 */
+   把 state 变成 WXML 能直接渲染的数组，页面里不再拼字符串。
+   图标：身份用原本的内联 SVG（改成 mask 着色），平台用内置的 PNG，
+   两者都通过 templates/tile.wxml 里的一套参数渲染。 */
 
 const M = require('./model.js');
+const { ICON_CLASS } = require('../assets/icon-class.js');
 
 const KIND_LABEL = { email: '邮箱', phone: '手机号', login: '登录' };
+const KIND_GLYPH = { email: 'email', phone: 'phone', login: 'login' };
 
-/* 首字母块：平台图标一期用首字母 + 品牌色（网页版的 letter 兜底样式） */
-function letterTile(name, color) {
-  const letter = String(name || '?').trim().slice(0, 1).toUpperCase() || '?';
-  return { letter, bg: color || '#8e8e93' };
+/* 身份卡面上的图标：邮箱、手机号、微信、Apple */
+function glyphOf(i) {
+  return i.type === 'login' ? M.provOf(i) : (KIND_GLYPH[i.type] || 'login');
 }
 
-function accountTile(a) {
-  const t = letterTile(a.name, M.brand(a));
-  return { id: a.id, name: a.name, letter: t.letter, bg: t.bg };
+/* 平台图标：优先自定义图标，其次内置 PNG，最后首字母 */
+function platformTile(a) {
+  const iconSrc = a && (a.iconFile || (typeof a.icon === 'string' && /^data:image\//.test(a.icon) ? a.icon : ''));
+  const preset = a ? M.sitePreset(a) : null;
+  const favClass = preset ? ICON_CLASS[preset[1]] || '' : '';
+  if (iconSrc) return { bgStyle: 'background:#fff;', iconSrc, favClass: '', glyph: '', letter: '' };
+  if (favClass) return { bgStyle: 'background:#fff;', iconSrc: '', favClass, glyph: '', letter: '' };
+  const name = a && a.name ? a.name : '?';
+  return {
+    bgStyle: `background:${a ? M.brand(a) : '#8e8e93'};`,
+    iconSrc: '',
+    favClass: '',
+    glyph: '',
+    letter: String(name).trim().slice(0, 1).toUpperCase() || '?',
+  };
+}
+
+/* 身份图标：卡面渐变 + 白色描边图标 */
+function identityTile(i) {
+  return {
+    bgStyle: `background:linear-gradient(180deg, ${i.color}, ${i.color});`,
+    iconSrc: '',
+    favClass: '',
+    glyph: glyphOf(i),
+    glyphClass: `ico tile-glyph ico-${glyphOf(i)}`,
+    glyphStyle: 'color:#fff;',
+    letter: '',
+  };
+}
+
+/* 密钥平台图标：优先内置 PNG，否则品牌色 + 首字母 */
+function tokenTile(t) {
+  const v = M.tokenVisual(t);
+  const iconSrc = t && (t.iconFile || (typeof t.icon === 'string' && /^data:image\//.test(t.icon) ? t.icon : ''));
+  if (iconSrc) {
+    return {
+      bgStyle: 'background:#fff;',
+      iconSrc,
+      favClass: '',
+      glyph: '',
+      glyphClass: '',
+      glyphStyle: '',
+      letter: '',
+      color: v.color,
+    };
+  }
+  const preset = M.presetForToken(t);
+  const favClass = preset ? ICON_CLASS[preset[1]] || '' : '';
+  return {
+    bgStyle: favClass ? 'background:#fff;' : `background:${v.color};`,
+    iconSrc: '',
+    favClass,
+    glyph: '',
+    glyphClass: '',
+    glyphStyle: '',
+    letter: favClass ? '' : (String(v.name || 'K').trim().slice(0, 1).toUpperCase() || 'K'),
+    color: v.color,
+  };
 }
 
 /* ---------- 首页 ---------- */
@@ -50,7 +108,8 @@ function buildHome(state, prefs) {
       stack: accs.slice(0, 4).map(accountTile),
       more: accs.length > 4 ? accs.length - 4 : 0,
       esim: M.isESim(i),
-      login: lg ? M.provOf(i) : '',
+      kindGlyphClass: `ico ${sim ? 'ico-chip' : 'ico-' + glyphOf(i)}`,
+      kindGlyphStyle: sim ? 'width:44rpx;height:34rpx;color:rgba(255,255,255,0.9);' : 'color:rgba(255,255,255,0.9);',
     };
   });
 
@@ -58,13 +117,11 @@ function buildHome(state, prefs) {
   const cur = deck[activeIdx];
   const gridList = cur ? M.accountsOf(state, cur.id) : (state.accounts || []).slice().sort((a, b) => M.zh(a.name, b.name));
   const grid = gridList.slice(0, 11).map(a => {
-    const t = accountTile(a);
-    return {
+    const t = platformTile(a);
+    return Object.assign({
       id: a.id,
       name: a.handle ? (privacy ? M.maskHandle(a.handle) : a.handle) : a.name,
-      letter: t.letter,
-      bg: t.bg,
-    };
+    }, t);
   });
 
   const e = counts.email, p = counts.phone, l = counts.login, a = (state.accounts || []).length;
@@ -74,7 +131,13 @@ function buildHome(state, prefs) {
 
   return {
     kind,
-    kinds: M.KINDS.map(k => ({ key: k, label: KIND_LABEL[k], count: counts[k], on: k === kind })),
+    kinds: M.KINDS.map(k => ({
+      key: k,
+      label: KIND_LABEL[k],
+      glyphClass: `ico ico-sm ico-${KIND_GLYPH[k]}`,
+      count: counts[k],
+      on: k === kind,
+    })),
     cards,
     active: activeIdx,
     hasIdentities: (state.identities || []).length > 0,
@@ -87,6 +150,11 @@ function buildHome(state, prefs) {
     moreCount: gridList.length > 11 ? gridList.length - 11 : 0,
     empty: !cur && !(state.accounts || []).length,
   };
+}
+
+function accountTile(a) {
+  const t = platformTile(a);
+  return Object.assign({ id: a.id, name: a.name }, t);
 }
 
 /* ---------- 网站与 App ---------- */
@@ -109,21 +177,19 @@ function buildSites(state, prefs, cat) {
       title: c,
       count: list.length,
       items: list.map(a => {
-        const t = accountTile(a);
+        const t = platformTile(a);
         const caps = M.identityIdsOf(a).map(id => M.idById(state, id)).filter(Boolean).slice(0, 3).map(i => ({
           key: i.id,
           label: i.label || (i.type === 'login' ? M.LOGIN[M.provOf(i)].short : M.display(i, privacy)),
           color: i.color,
         }));
-        return {
+        return Object.assign({
           id: a.id,
           name: a.name,
-          letter: t.letter,
-          bg: t.bg,
           handle: a.handle ? (privacy ? M.maskHandle(a.handle) : a.handle) : '',
           caps,
           loose: caps.length === 0,
-        };
+        }, t);
       }),
     };
   });
@@ -146,22 +212,19 @@ function buildTokens(state, prefs, cat, revealedIds) {
     const ex = M.expiryInfo(t);
     const acc = t.accountId ? M.accById(state, t.accountId) : null;
     const revealed = !!(revealedIds && revealedIds.includes(t.id));
-    const tile = letterTile(v.name, v.color);
-    return {
+    const tile = tokenTile(t);
+    return Object.assign({
       id: t.id,
       name: t.name || `${M.platformOfToken(t) || '平台'} 密钥`,
       platform: M.platformOfToken(t) || '自定义平台',
       category: t.category || '其他',
       value: revealed ? t.value : M.maskValue(t.value),
       revealed,
-      letter: tile.letter,
-      bg: tile.bg,
-      color: v.color,
       expText: ex.text,
       expCls: ex.cls,
       accountName: acc ? (acc.name + (acc.handle ? ' · ' + acc.handle : '')) : '',
       notes: t.notes ? String(t.notes).slice(0, 24) : '',
-    };
+    }, tile);
   });
 
   return {
@@ -174,8 +237,8 @@ function buildTokens(state, prefs, cat, revealedIds) {
 }
 
 /* ---------- 关系图 ----------
-   三列：身份 → 平台 → 密钥。同平台只出现一个节点。
-   连线点位在页面里按列宽算出，这里只给出节点与边的组合关系。 */
+   三列：身份 → 平台 → 密钥，同平台只出现一个节点。
+   连线点位由页面按列宽算出，这里只给出节点与边的组合关系。 */
 function buildGraph(state, prefs) {
   const privacy = !!prefs.privacy;
   const identities = (state.identities || [])
@@ -225,40 +288,36 @@ function buildGraph(state, prefs) {
     index: k,
     title: i.label || M.display(i, privacy),
     sub: i.type === 'login' ? M.LOGIN[M.provOf(i)].short : (i.label ? M.display(i, privacy) : ''),
-    kindLabel: i.type === 'phone' ? '手机号' : i.type === 'login' ? '登录' : '邮箱',
     newKind: k === 0 || identities[k - 1].type !== i.type,
     count: sortedGroups.filter(g => g.identityIds.includes(i.id)).length,
     color: i.color,
-    style: `background-image:linear-gradient(145deg, ${M.grad(i.color)});`,
+    tile: identityTile(i),
   }));
 
   const plats = sortedGroups.map((g, k) => {
     const rep = g.accounts[0];
-    const tile = letterTile(g.name, M.brand(Object.assign({}, rep, { name: g.name, domain: g.domain })));
+    const tile = platformTile(Object.assign({}, rep, { name: g.name, domain: g.domain }));
     return {
       key: g.key,
       index: k,
       name: g.name,
-      letter: tile.letter,
-      bg: tile.bg,
       count: g.accounts.length,
       loose: g.identityIds.length === 0,
+      tile,
     };
   });
 
   const toks = [];
   sortedGroups.forEach((g, gi) => {
     g.tokens.forEach(t => {
-      const v = M.tokenVisual(t);
-      const tile = letterTile(v.name, v.color);
+      const tile = tokenTile(t);
       toks.push({
         id: t.id,
         groupIndex: gi,
         name: t.name || '未命名密钥',
-        letter: tile.letter,
-        bg: tile.bg,
-        color: v.color,
+        color: tile.color,
         state: t.expiresAt && t.expiresAt < Date.now() ? 'expired' : 'ok',
+        tile,
       });
     });
   });
@@ -273,4 +332,4 @@ function buildGraph(state, prefs) {
   return { empty: false, ids, plats, toks, links };
 }
 
-module.exports = { buildHome, buildSites, buildTokens, buildGraph, letterTile };
+module.exports = { buildHome, buildSites, buildTokens, buildGraph, accountTile, platformTile, tokenTile, identityTile, glyphOf };

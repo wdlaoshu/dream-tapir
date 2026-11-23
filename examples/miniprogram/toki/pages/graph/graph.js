@@ -4,7 +4,10 @@ const ui = require('../../utils/ui.js');
 
 const app = getApp();
 
-/* 布局全部用 rpx：750rpx 就是屏宽，不用先量窗口 */
+/* 布局全部用 rpx：750rpx 就是屏宽，不用先量窗口。
+   连线用一张整幅的 SVG 背景：贝塞尔曲线跟网页版一致，
+   又能避开四端 canvas 的差异。 */
+const VIEW_W = 710;
 const ID_W = 250;
 const GAP1 = 20;
 const PLAT_W = 260;
@@ -21,7 +24,7 @@ Page({
     theme: 'theme-auto',
     empty: false,
     nodes: [],
-    edges: [],
+    edgesUrl: '',
     height: 400,
     colHeads: [],
   },
@@ -43,10 +46,10 @@ Page({
   },
 
   layout(vm) {
-    if (vm.empty) return { nodes: [], edges: [], height: 400, colHeads: [] };
+    if (vm.empty) return { nodes: [], edgesUrl: '', height: 400, colHeads: [] };
 
     const nodes = [];
-    const edges = [];
+    const paths = [];
 
     const idY = k => HEAD + k * (NODE_H + GAP_Y);
     const platY = k => HEAD + k * (NODE_H + GAP_Y);
@@ -57,16 +60,11 @@ Page({
         key: 'id-' + i.key,
         kind: 'id',
         id: i.key,
-        x: 0,
-        y: idY(i.index),
-        w: ID_W,
-        h: NODE_H,
+        style: `left:0rpx;top:${idY(i.index)}rpx;width:${ID_W}rpx;height:${NODE_H}rpx;`,
         title: i.title,
         sub: i.sub,
         badge: i.count ? String(i.count) : '',
-        style: `left:0rpx;top:${idY(i.index)}rpx;width:${ID_W}rpx;height:${NODE_H}rpx;`,
-        tileStyle: i.style,
-        letter: (i.title || '?').slice(0, 1).toUpperCase(),
+        tile: i.tile,
       });
     });
 
@@ -74,83 +72,77 @@ Page({
       nodes.push({
         key: 'p-' + p.key,
         kind: 'plat',
-        x: ID_W + GAP1,
-        y: platY(p.index),
-        w: PLAT_W,
-        h: NODE_H,
+        id: '',
+        style: `left:${ID_W + GAP1}rpx;top:${platY(p.index)}rpx;width:${PLAT_W}rpx;height:${NODE_H}rpx;`,
         title: p.name,
         sub: p.count > 1 ? `${p.count} 个账号` : '',
         badge: '',
-        style: `left:${ID_W + GAP1}rpx;top:${platY(p.index)}rpx;width:${PLAT_W}rpx;height:${NODE_H}rpx;`,
-        tileStyle: `background:${p.bg}`,
-        letter: p.letter,
+        tile: p.tile,
         loose: p.loose,
       });
     });
 
     /* 同一平台的密钥按顺序排在第三列 */
-    let tokCursor = 0;
-    const tokensByGroup = new Map();
+    let cursor = 0;
+    const tokenY = new Map();
     vm.toks.forEach(t => {
-      const y = tokY(tokCursor++);
-      tokensByGroup.set(t.id, y);
+      const y = tokY(cursor++);
+      tokenY.set(t.id, y);
       nodes.push({
         key: 't-' + t.id,
         kind: 'tok',
         id: t.id,
-        x: ID_W + GAP1 + PLAT_W + GAP2,
-        y,
-        w: TOK_W,
-        h: TOK_H,
+        style: `left:${ID_W + GAP1 + PLAT_W + GAP2}rpx;top:${y}rpx;width:${TOK_W}rpx;height:${TOK_H}rpx;`,
         title: t.name,
         sub: t.state === 'expired' ? '已过期' : '',
-        style: `left:${ID_W + GAP1 + PLAT_W + GAP2}rpx;top:${y}rpx;width:${TOK_W}rpx;height:${TOK_H}rpx;`,
-        tileStyle: `background:${t.bg}`,
-        letter: t.letter,
+        badge: '',
+        tile: t.tile,
       });
     });
 
-    let edgeSeq = 0;
-    const line = (x1, y1, x2, y2, color) => {
-      const dx = x2 - x1, dy = y2 - y1;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
-      return {
-        id: 'e' + (edgeSeq++),
-        style: `left:${x1}rpx;top:${y1 - 1}rpx;width:${len}rpx;transform:rotate(${deg}deg);background:${color};`,
-      };
+    /* 曲线从右边缘连到左边缘，控制点取中点，和网页版一样 */
+    const curve = (x1, y1, x2, y2, color) => {
+      const mx = (x1 + x2) / 2;
+      paths.push(
+        `<path d="M${x1} ${y1.toFixed(1)}C${mx} ${y1.toFixed(1)} ${mx} ${y2.toFixed(1)} ${x2} ${y2.toFixed(1)}" fill="none" stroke="${color}" stroke-width="2" opacity="0.55"/>`
+      );
     };
 
-    /* 身份 → 平台 */
     vm.links.forEach(l => {
       const idNode = vm.ids.find(i => i.key === l.from);
       const platNode = vm.plats.find(p => p.index === l.to);
       if (!idNode || !platNode) return;
-      const y1 = idY(idNode.index) + NODE_H / 2;
-      const y2 = platY(platNode.index) + NODE_H / 2;
-      edges.push(line(ID_W, y1, ID_W + GAP1, y2, l.color));
+      curve(ID_W, idY(idNode.index) + NODE_H / 2, ID_W + GAP1, platY(platNode.index) + NODE_H / 2, l.color);
     });
 
-    /* 平台 → 密钥 */
     vm.toks.forEach(t => {
       const platNode = vm.plats.find(p => p.index === t.groupIndex);
-      const y2 = tokensByGroup.get(t.id);
+      const y2 = tokenY.get(t.id);
       if (!platNode || y2 === undefined) return;
-      const y1 = platY(platNode.index) + NODE_H / 2;
-      edges.push(line(ID_W + GAP1 + PLAT_W, y1, ID_W + GAP1 + PLAT_W + GAP2, y2 + TOK_H / 2, t.color));
+      curve(
+        ID_W + GAP1 + PLAT_W,
+        platY(platNode.index) + NODE_H / 2,
+        ID_W + GAP1 + PLAT_W + GAP2,
+        y2 + TOK_H / 2,
+        t.color
+      );
     });
 
     const rows = Math.max(vm.ids.length, vm.plats.length);
     const height = HEAD + Math.max(rows * (NODE_H + GAP_Y), vm.toks.length * (TOK_H + GAP_Y)) + 30;
+    const H = Math.max(360, height);
+
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW_W} ${H}" preserveAspectRatio="none">${paths.join('')}</svg>`;
 
     return {
       nodes,
-      edges,
-      height: Math.max(360, height),
+      edgesUrl: `background-image:url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}');background-size:100% 100%;background-repeat:no-repeat;background-position:top left;`,
+      height: H,
       colHeads: [
-        { label: '身份', style: `left:0rpx;top:14rpx;width:${ID_W}rpx;` },
-        { label: '平台', style: `left:${ID_W + GAP1}rpx;top:14rpx;width:${PLAT_W}rpx;` },
-        { label: '密钥', style: `left:${ID_W + GAP1 + PLAT_W + GAP2}rpx;top:14rpx;width:${TOK_W}rpx;` },
+        { label: '身份', style: `left:0rpx;width:${ID_W}rpx;` },
+        { label: '平台', style: `left:${ID_W + GAP1}rpx;width:${PLAT_W}rpx;` },
+        { label: '密钥', style: `left:${ID_W + GAP1 + PLAT_W + GAP2}rpx;width:${TOK_W}rpx;` },
       ],
     };
   },

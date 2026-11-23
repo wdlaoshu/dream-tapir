@@ -1,6 +1,7 @@
 const store = require('../../utils/store.js');
 const M = require('../../utils/model.js');
 const ui = require('../../utils/ui.js');
+const V = require('../../utils/view.js');
 const { PRESETS } = require('../../data/presets.js');
 
 const app = getApp();
@@ -17,8 +18,10 @@ Page({
     category: '其他',
     notes: '',
     title: '新网站或 App',
-    previewLetter: '?',
-    previewBg: '#8e8e93',
+    previewTile: { bgStyle: 'background:#8e8e93;', letter: '?', iconSrc: '', favClass: '', glyph: '', glyphClass: '', glyphStyle: '' },
+    iconData: '',
+    iconFile: '',
+    iconMenuOpen: false,
     picks: [],
     cats: M.CATS,
     suggestions: [],
@@ -47,6 +50,8 @@ Page({
       domain: existing ? existing.domain || '' : '',
       category: existing ? existing.category || '其他' : '其他',
       notes: existing ? existing.notes || '' : '',
+      iconData: existing && typeof existing.icon === 'string' && /^data:image\//.test(existing.icon) ? existing.icon : '',
+      iconFile: existing && existing.iconFile ? existing.iconFile : '',
       title: existing ? '编辑网站或 App' : '新网站或 App',
       deleteText: existing ? `删除 ${existing.name}` : '',
     }, () => {
@@ -82,12 +87,8 @@ Page({
   paintPreview() {
     const name = String(this.data.name || '').trim();
     const domain = M.cleanDomain(this.data.domain);
-    const p = M.sitePreset({ name, domain });
-    const bg = p ? p[3] : M.brand({ name, domain });
-    this.setData({
-      previewLetter: (name || '?').slice(0, 1).toUpperCase(),
-      previewBg: bg,
-    });
+    const tile = V.platformTile({ name, domain, icon: this.data.iconData, iconFile: this.data.iconFile });
+    this.setData({ previewTile: tile });
   },
 
   suggest() {
@@ -103,7 +104,7 @@ Page({
         domain: p[1],
         category: p[2],
         color: p[3],
-        letter: p[0].slice(0, 1).toUpperCase(),
+        tile: V.platformTile({ name: p[0], domain: p[1] }),
       })),
     });
   },
@@ -153,6 +154,44 @@ Page({
     this.paintPicks(sel);
   },
 
+  toggleIconMenu() {
+    this.setData({ iconMenuOpen: !this.data.iconMenuOpen });
+  },
+
+  /* 自定义图标：选图 → 存进小程序的用户目录，路径跟着记录走 */
+  onPickIcon() {
+    this.setData({ iconMenuOpen: false });
+    if (typeof wx.chooseImage !== 'function') { ui.toast('当前容器不支持选图'); return; }
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: res => {
+        const temp = (res.tempFilePaths || [])[0];
+        if (!temp) return;
+        const fs = typeof wx.getFileSystemManager === 'function' ? wx.getFileSystemManager() : null;
+        if (!fs || typeof fs.readFile !== 'function') { ui.toast('读不了这张图片'); return; }
+        fs.readFile({
+          filePath: temp,
+          encoding: 'base64',
+          success: r => {
+            const mime = /\.png$/i.test(temp) ? 'png' : 'jpeg';
+            const data = `data:image/${mime};base64,${r.data}`;
+            /* 跟网页版一样，超过 400KB 的图标不存，免得拖垮同步 */
+            if (data.length > 400000) { ui.toast('图片太大，换一张小一点的'); return; }
+            this.setData({ iconData: data, iconFile: '' }, () => this.paintPreview());
+          },
+          fail: () => ui.toast('读不了这张图片'),
+        });
+      },
+      fail: () => {},
+    });
+  },
+
+  onResetIcon() {
+    this.setData({ iconMenuOpen: false, iconFile: '', iconData: '' }, () => this.paintPreview());
+  },
+
   onSave() {
     const name = String(this.data.name || '').trim();
     if (!name) { ui.toast('填一下名称'); return; }
@@ -165,9 +204,13 @@ Page({
       identityIds: (this.selectedIds || []).slice(),
       notes: String(this.data.notes || '').trim(),
     };
+    if (this.data.iconFile) data.iconFile = this.data.iconFile;
+    if (this.data.iconData) data.icon = this.data.iconData;
     const existing = this.data.id ? (state.accounts || []).find(a => a.id === this.data.id) : null;
-    if (existing) Object.assign(existing, data);
-    else state.accounts.push(Object.assign({ id: M.uid(), createdAt: Date.now() }, data));
+    if (existing) {
+      Object.assign(existing, data);
+      if (!data.iconFile) delete existing.iconFile;
+    } else state.accounts.push(Object.assign({ id: M.uid(), createdAt: Date.now() }, data));
 
     store.save().then(() => {
       ui.toast(existing ? '已保存' : `已添加 ${name}`);

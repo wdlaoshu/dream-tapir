@@ -1,3 +1,6 @@
+@import "assets/glyphs.wxss";
+@import "assets/icons.wxss";
+
 /* Toki 小程序 · 全局样式
    与网页版 web/styles.css 同一套观感：深色玻璃、圆角卡片、大标题。
    配色走 CSS 变量，主题由页面根节点的 theme-* 类切换。 */
@@ -257,19 +260,6 @@ page {
   gap: 6rpx;
 }
 
-.stack-tile {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 12rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20rpx;
-  font-weight: 700;
-  color: #fff;
-  border: 1rpx solid rgba(255, 255, 255, 0.35);
-}
-
 .stack-more {
   font-size: 20rpx;
   color: rgba(255, 255, 255, 0.8);
@@ -293,24 +283,62 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
-  font-weight: 700;
   color: #fff;
   flex: none;
+  overflow: hidden;
+  background: #8e8e93;
 }
 
 .tile-lg {
   width: 104rpx;
   height: 104rpx;
   border-radius: 28rpx;
-  font-size: 46rpx;
 }
 
 .tile-sm {
   width: 56rpx;
   height: 56rpx;
   border-radius: 16rpx;
-  font-size: 26rpx;
+}
+
+.tile-xs {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 12rpx;
+}
+
+.tile-letter {
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tile-sm .tile-letter { font-size: 25rpx; }
+.tile-xs .tile-letter { font-size: 20rpx; }
+.tile-lg .tile-letter { font-size: 46rpx; }
+
+/* 平台图标：白底 + 68% 的图，跟网页版 web/styles.css 的 .fav 一致 */
+.tile-img {
+  width: 68%;
+  height: 68%;
+}
+
+.tile-fav {
+  width: 68%;
+  height: 68%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.tile-glyph {
+  width: 56%;
+  height: 56%;
+}
+
+.tile-lg .tile-glyph {
+  width: 46%;
+  height: 46%;
 }
 
 /* ---------- 网格 ---------- */

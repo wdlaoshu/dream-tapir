@@ -1,11 +1,16 @@
+<import src="../../templates/tile.wxml" />
 <import src="../../templates/tabbar.wxml" />
 
 <view class="page {{theme}}">
   <view class="top">
     <view class="h1">账号</view>
     <view class="round-group">
-      <view class="round" bindtap="openAdd">+</view>
-      <view class="round" bindtap="openMenu">⋯</view>
+      <view class="round" bindtap="openAdd">
+        <view class="ico ico-md ico-plus"></view>
+      </view>
+      <view class="round" bindtap="openMenu">
+        <view class="ico ico-md ico-dots"></view>
+      </view>
     </view>
   </view>
   <view class="summary">{{summary}}</view>
@@ -18,6 +23,7 @@
       data-kind="{{item.key}}"
       bindtap="onKind"
     >
+      <view class="{{item.glyphClass}}"></view>
       <text>{{item.label}}</text>
       <text class="seg-count">{{item.count}}</text>
     </view>
@@ -36,6 +42,7 @@
           <view class="card-sheen"></view>
           <view class="card-top">
             <view class="card-kind">
+              <view class="{{item.kindGlyphClass}}" style="{{item.kindGlyphStyle}}"></view>
               <text>{{item.title}}</text>
               <text wx:if="{{item.esim}}" class="tag">eSIM</text>
             </view>
@@ -46,13 +53,7 @@
             <view class="card-note">{{item.note}}</view>
             <view class="stack">
               <text wx:if="{{item.more}}" class="stack-more">+{{item.more}}</text>
-              <view
-                wx:for="{{item.stack}}"
-                wx:for-item="t"
-                wx:key="id"
-                class="stack-tile"
-                style="background:{{t.bg}}"
-              >{{t.letter}}</view>
+              <template wx:for="{{item.stack}}" wx:for-item="st" wx:key="id" is="tile" data="{{t: st, cls: 'tile-xs stack-tile'}}" />
             </view>
           </view>
         </view>
@@ -76,7 +77,10 @@
         <view class="h2">{{gridTitle}}</view>
         <view class="sub" wx:if="{{gridSub}}">{{gridSub}}</view>
       </view>
-      <view class="pill" bindtap="onGridAdd">+ 添加</view>
+      <view class="pill-btn" bindtap="onGridAdd">
+        <view class="ico ico-sm ico-plus"></view>
+        <text>添加</text>
+      </view>
     </view>
 
     <view class="grid">
@@ -87,7 +91,7 @@
         data-id="{{item.id}}"
         bindtap="onGridItem"
       >
-        <view class="tile" style="background:{{item.bg}}">{{item.letter}}</view>
+        <template is="tile" data="{{t: item, cls: ''}}" />
         <view class="grid-name">{{item.name}}</view>
       </view>
       <view wx:if="{{moreCount}}" class="grid-item" bindtap="onMore">
@@ -95,7 +99,9 @@
         <view class="grid-name">全部</view>
       </view>
       <view wx:if="{{!moreCount}}" class="grid-item" bindtap="onGridAdd">
-        <view class="tile tile-add">+</view>
+        <view class="tile tile-add">
+          <view class="ico ico-md ico-plus"></view>
+        </view>
         <view class="grid-name">添加</view>
       </view>
     </view>
@@ -111,19 +117,25 @@
     </view>
     <view class="popup-body">
       <view class="row" bindtap="onAddIdentity">
-        <view class="tile tile-sm" style="background:#0a84ff">@</view>
+        <view class="tile tile-sm identity-tile">
+          <view class="ico ico-md ico-email"></view>
+        </view>
         <view class="row-main"><view class="row-title">邮箱、手机号或登录身份</view></view>
-        <text class="chev">›</text>
+        <view class="ico ico-thin ico-chev chev"></view>
       </view>
       <view class="row" bindtap="onAddAccount">
-        <view class="tile tile-sm" style="background:#30d158">#</view>
+        <view class="tile tile-sm site-tile">
+          <view class="ico ico-md ico-open"></view>
+        </view>
         <view class="row-main"><view class="row-title">网站与 App</view></view>
-        <text class="chev">›</text>
+        <view class="ico ico-thin ico-chev chev"></view>
       </view>
       <view class="row" bindtap="onAddToken">
-        <view class="tile tile-sm" style="background:#ff9f0a">K</view>
+        <view class="tile tile-sm token-tile">
+          <view class="ico ico-md ico-key"></view>
+        </view>
         <view class="row-main"><view class="row-title">密钥</view></view>
-        <text class="chev">›</text>
+        <view class="ico ico-thin ico-chev chev"></view>
       </view>
     </view>
   </view>
@@ -136,22 +148,35 @@
     </view>
     <view class="popup-body">
       <view class="row" bindtap="onTogglePrivacy">
+        <view class="menu-ic"><view class="ico ico-md ico-eye"></view></view>
         <view class="row-main"><view class="row-title">{{privacyText}}</view></view>
       </view>
       <view class="row" bindtap="onCycleTheme">
+        <view class="menu-ic"><view class="ico ico-md ico-sun"></view></view>
         <view class="row-main">
           <view class="row-title">外观</view>
           <view class="row-sub">{{themeText}}</view>
         </view>
       </view>
+      <view class="row" bindtap="onSync">
+        <view class="menu-ic"><view class="ico ico-md ico-cloud"></view></view>
+        <view class="row-main">
+          <view class="row-title">加密同步</view>
+          <view class="row-sub">{{syncText}}</view>
+        </view>
+        <view class="ico ico-thin ico-chev chev"></view>
+      </view>
       <view class="row" bindtap="onBackup">
+        <view class="menu-ic"><view class="ico ico-md ico-download"></view></view>
         <view class="row-main"><view class="row-title">备份与导入</view></view>
-        <text class="chev">›</text>
+        <view class="ico ico-thin ico-chev chev"></view>
       </view>
       <view class="row" bindtap="onDemo">
+        <view class="menu-ic"><view class="ico ico-md ico-grid"></view></view>
         <view class="row-main"><view class="row-title">载入示例数据</view></view>
       </view>
       <view class="row" bindtap="onWipe">
+        <view class="menu-ic"><view class="ico ico-md ico-trash"></view></view>
         <view class="row-main"><view class="row-title row-danger">清空全部数据</view></view>
       </view>
     </view>

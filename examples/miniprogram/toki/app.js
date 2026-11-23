@@ -3,6 +3,7 @@
 
 const store = require('./utils/store.js');
 const { demo } = require('./utils/model.js');
+const Sync = require('./utils/sync.js');
 
 let bootPromise = null;
 
@@ -24,6 +25,9 @@ App({
   onLaunch() {
     bootPromise = boot().then(res => {
       this.globalData.prefs = res.prefs;
+      /* 每次保存后排队一次加密同步 */
+      store.subscribe(() => Sync.schedule());
+      Sync.init();
       return res;
     });
   },

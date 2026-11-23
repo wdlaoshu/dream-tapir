@@ -1,3 +1,5 @@
+<import src="../../templates/tile.wxml" />
+
 <view class="page {{theme}} form-page">
   <view class="form-bar">
     <view class="form-bar-btn" bindtap="onBack">取消</view>
@@ -6,16 +8,32 @@
   </view>
 
   <view class="hero">
-    <view class="tile tile-lg" style="background:{{previewBg}}">{{previewLetter}}</view>
+    <view class="hero-icon" bindtap="toggleIconMenu">
+      <template is="tile" data="{{t: previewTile, cls: 'tile-lg'}}" />
+      <view class="hero-edit">
+        <view class="ico ico-sm ico-edit"></view>
+      </view>
+    </view>
     <view class="hero-name">{{name || platform || '新密钥'}}</view>
     <view class="hero-sub">{{platform || '先选择平台'}}</view>
+  </view>
+
+  <view class="icon-menu" wx:if="{{iconMenuOpen}}">
+    <view class="icon-menu-item" bindtap="onPickIcon">
+      <view class="ico ico-md ico-photo"></view>
+      <text>从相册选择</text>
+    </view>
+    <view class="icon-menu-item" wx:if="{{iconFile || iconData}}" bindtap="onResetIcon">
+      <view class="ico ico-md ico-reset"></view>
+      <text>使用平台默认图标</text>
+    </view>
   </view>
 
   <view class="group" style="margin-top:20rpx;">
     <view class="field" bindtap="openPlatform">
       <text class="field-label">平台</text>
       <view class="field-input link-val">{{platform || '选择平台'}}</view>
-      <text class="chev">›</text>
+      <view class="ico ico-thin ico-chev chev"></view>
     </view>
     <view class="field">
       <text class="field-label">名称</text>
@@ -51,7 +69,7 @@
       />
     </view>
   </view>
-  <view class="hint">默认打码显示，列表里点「显示」才展开。密钥只保存在这台设备上。</view>
+  <view class="hint">默认打码显示，列表里点眼睛图标才展开。密钥只保存在这台设备上。</view>
 
   <view class="section-title">有效期</view>
   <view class="pills">
@@ -63,7 +81,7 @@
       <view class="field">
         <text class="field-label">到期</text>
         <view class="field-input">{{expiryDate}}</view>
-        <text class="chev">›</text>
+        <view class="ico ico-thin ico-chev chev"></view>
       </view>
     </picker>
   </view>
@@ -77,9 +95,9 @@
       data-id="{{item.id}}"
       bindtap="onPickAccount"
     >
-      <view class="dot" style="background:{{previewBg}}"></view>
+      <view class="dot" style="background:{{item.color}}"></view>
       <view class="row-main"><view class="row-title">{{item.name}}</view></view>
-      <text class="tick" wx:if="{{item.on}}">✓</text>
+      <view wx:if="{{item.on}}" class="ico ico-md ico-tick tick"></view>
     </view>
   </view>
   <view class="hint" wx:else>这个平台下还没有记录过账号。先添加网站与 App，就能把密钥精确关联到某个账号。</view>
@@ -121,7 +139,10 @@
   </view>
 
   <view class="danger-zone" wx:if="{{deleteText}}">
-    <view class="btn btn-danger btn-block" bindtap="onDelete">{{deleteText}}</view>
+    <view class="btn btn-danger btn-block" bindtap="onDelete">
+      <view class="ico ico-sm ico-trash"></view>
+      <text>{{deleteText}}</text>
+    </view>
   </view>
 
   <view wx:if="{{platformOpen}}" class="mask" bindtap="closePlatform"></view>
@@ -148,14 +169,16 @@
           data-i="{{index}}"
           bindtap="onPickPlatform"
         >
-          <view class="tile tile-sm" style="background:{{item.color}}">{{item.letter}}</view>
+          <template is="tile" data="{{t: item.tile, cls: 'tile-sm'}}" />
           <view class="row-main">
             <view class="row-title">{{item.name}}</view>
             <view class="row-sub">{{item.category}} · {{item.domain}}</view>
           </view>
         </view>
         <view class="row" bindtap="onUseCustom">
-          <view class="tile tile-sm" style="background:#8e8e93">+</view>
+          <view class="tile tile-sm tile-add">
+            <view class="ico ico-md ico-plus"></view>
+          </view>
           <view class="row-main">
             <view class="row-title">用「{{platformQuery || platform || '自定义平台'}}」</view>
           </view>

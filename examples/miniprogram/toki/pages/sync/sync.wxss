@@ -1,0 +1,84 @@
+.form-page {
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+}
+
+.form-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 8rpx 6rpx;
+}
+
+.form-bar-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.form-bar-btn {
+  font-size: 28rpx;
+  color: var(--ink-2);
+  padding: 10rpx 12rpx;
+  min-width: 80rpx;
+}
+
+.ph {
+  color: var(--ink-3);
+}
+
+.sync-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 40rpx 20rpx 24rpx;
+}
+
+.sync-ic {
+  color: var(--accent);
+}
+
+.sync-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+}
+
+.sync-sub {
+  font-size: 25rpx;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.sync-state {
+  font-size: 25rpx;
+  color: var(--ink-2);
+}
+
+.sync-state.error {
+  color: var(--danger);
+}
+
+.sync-state.syncing {
+  color: #ff9f0a;
+}
+
+.row-tint {
+  color: var(--accent);
+}
+
+.row-danger {
+  color: var(--danger);
+}
+
+.progress {
+  color: var(--accent);
+  text-align: center;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 12rpx;
+}

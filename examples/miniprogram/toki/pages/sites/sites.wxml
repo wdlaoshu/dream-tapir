@@ -1,10 +1,13 @@
+<import src="../../templates/tile.wxml" />
 <import src="../../templates/tabbar.wxml" />
 
 <view class="page {{theme}}">
   <view class="top">
     <view class="h1">网站</view>
     <view class="round-group">
-      <view class="round" bindtap="onAdd">+</view>
+      <view class="round" bindtap="onAdd">
+        <view class="ico ico-md ico-plus"></view>
+      </view>
     </view>
   </view>
   <view class="summary" wx:if="{{!empty}}">共 {{total}} 个网站与 App</view>
@@ -37,7 +40,7 @@
           data-id="{{a.id}}"
           bindtap="onItem"
         >
-          <view class="tile" style="background:{{a.bg}}">{{a.letter}}</view>
+          <template is="tile" data="{{t: a, cls: ''}}" />
           <view class="row-main">
             <view class="row-title">{{a.name}}<em wx:if="{{a.handle}}">{{a.handle}}</em></view>
             <view class="caps" wx:if="{{!a.loose}}">
@@ -50,7 +53,7 @@
               <view class="cap dim">未关联身份</view>
             </view>
           </view>
-          <text class="chev">›</text>
+          <view class="ico ico-thin ico-chev chev"></view>
         </view>
       </view>
     </view>

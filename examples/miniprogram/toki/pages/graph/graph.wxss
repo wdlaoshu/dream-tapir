@@ -21,15 +21,9 @@
   width: 100%;
 }
 
-.gedge {
-  position: absolute;
-  height: 2rpx;
-  transform-origin: 0 50%;
-  opacity: 0.6;
-}
-
 .ghead {
   position: absolute;
+  top: 14rpx;
   font-size: 20rpx;
   color: var(--ink-3);
   text-align: center;

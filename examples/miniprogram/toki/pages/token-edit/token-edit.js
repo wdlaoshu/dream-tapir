@@ -1,6 +1,7 @@
 const store = require('../../utils/store.js');
 const M = require('../../utils/model.js');
 const ui = require('../../utils/ui.js');
+const V = require('../../utils/view.js');
 const { TOKEN_PRESETS } = require('../../data/presets.js');
 
 const app = getApp();
@@ -27,8 +28,10 @@ Page({
     platformOpen: false,
     platformQuery: '',
     platformList: [],
-    previewLetter: 'K',
-    previewBg: '#0a84ff',
+    previewTile: { bgStyle: 'background:#0a84ff;', letter: 'K', iconSrc: '', favClass: '', glyph: '', glyphClass: '', glyphStyle: '' },
+    iconData: '',
+    iconFile: '',
+    iconMenuOpen: false,
     maskPreview: '••••••••',
     deleteText: '',
   },
@@ -59,6 +62,8 @@ Page({
       color: base.color || v.color || '#0a84ff',
       expiryMode: base.expiresAt ? 'date' : 'never',
       expiryDate: base.expiresAt ? M.dateText(base.expiresAt) : M.dateText(Date.now() + 90 * M.DAY),
+      iconData: existing && typeof existing.icon === 'string' && /^data:image\//.test(existing.icon) ? existing.icon : '',
+      iconFile: existing && existing.iconFile ? existing.iconFile : '',
       deleteText: existing ? '删除这条密钥' : '',
     }, () => {
       this.paintPreview();
@@ -68,12 +73,53 @@ Page({
   },
 
   paintPreview() {
-    const name = this.data.platform || this.data.name || '新密钥';
     this.setData({
-      previewLetter: String(name).slice(0, 1).toUpperCase(),
-      previewBg: this.data.color || '#0a84ff',
-      maskPreview: M.maskValue(this.data.value),
+      previewTile: V.tokenTile({
+        platform: this.data.platform,
+        domain: this.data.domain,
+        name: this.data.name,
+        color: this.data.color,
+        icon: this.data.iconData,
+        iconFile: this.data.iconFile,
+      }),
     });
+  },
+
+  toggleIconMenu() {
+    this.setData({ iconMenuOpen: !this.data.iconMenuOpen });
+  },
+
+  onPickIcon() {
+    this.setData({ iconMenuOpen: false });
+    if (typeof wx.chooseImage !== 'function') { ui.toast('当前容器不支持选图'); return; }
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: res => {
+        const temp = (res.tempFilePaths || [])[0];
+        if (!temp) return;
+        const fs = typeof wx.getFileSystemManager === 'function' ? wx.getFileSystemManager() : null;
+        if (!fs || typeof fs.readFile !== 'function') { ui.toast('读不了这张图片'); return; }
+        fs.readFile({
+          filePath: temp,
+          encoding: 'base64',
+          success: r => {
+            const mime = /\.png$/i.test(temp) ? 'png' : 'jpeg';
+            const data = `data:image/${mime};base64,${r.data}`;
+            /* 跟网页版一样，超过 400KB 的图标不存，免得拖垮同步 */
+            if (data.length > 400000) { ui.toast('图片太大，换一张小一点的'); return; }
+            this.setData({ iconData: data, iconFile: '' }, () => this.paintPreview());
+          },
+          fail: () => ui.toast('读不了这张图片'),
+        });
+      },
+      fail: () => {},
+    });
+  },
+
+  onResetIcon() {
+    this.setData({ iconMenuOpen: false, iconFile: '', iconData: '' }, () => this.paintPreview());
   },
 
   paintAccounts() {
@@ -89,6 +135,7 @@ Page({
       accounts: list.map(a => ({
         id: a.id,
         name: a.name + (a.handle ? ' · ' + a.handle : ''),
+        color: this.data.color || '#0a84ff',
         on: a.id === this.data.accountId,
       })),
       accountName: sel ? (sel.name + (sel.handle ? ' · ' + sel.handle : '')) : '',
@@ -109,7 +156,13 @@ Page({
     const q = String(this.data.platformQuery || '').trim().toLowerCase();
     const list = TOKEN_PRESETS
       .filter(p => !q || p[0].toLowerCase().indexOf(q) >= 0 || p[1].indexOf(q) >= 0 || p[2].indexOf(q) >= 0)
-      .map(p => ({ name: p[0], domain: p[1], category: p[2], color: p[3], letter: p[0].slice(0, 1).toUpperCase() }));
+      .map(p => ({
+        name: p[0],
+        domain: p[1],
+        category: p[2],
+        color: p[3],
+        tile: V.tokenTile({ platform: p[0], domain: p[1], color: p[3] }),
+      }));
     this.setData({ platformList: list });
   },
 
@@ -170,10 +223,14 @@ Page({
         : 0,
       updatedAt: now,
     };
+    if (this.data.iconFile) data.iconFile = this.data.iconFile;
+    if (this.data.iconData) data.icon = this.data.iconData;
 
     const existing = this.data.id ? (state.tokens || []).find(t => t.id === this.data.id) : null;
-    if (existing) Object.assign(existing, data);
-    else state.tokens.push(Object.assign({ id: M.uid(), createdAt: now }, data));
+    if (existing) {
+      Object.assign(existing, data);
+      if (!data.iconFile) delete existing.iconFile;
+    } else state.tokens.push(Object.assign({ id: M.uid(), createdAt: now }, data));
 
     store.save().then(() => {
       ui.toast(existing ? '已保存' : '已添加');

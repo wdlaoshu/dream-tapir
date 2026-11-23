@@ -1,3 +1,5 @@
+<import src="../../templates/tile.wxml" />
+
 <view class="page {{theme}} form-page">
   <view class="form-bar">
     <view class="form-bar-btn" bindtap="onBack">取消</view>
@@ -5,15 +7,32 @@
     <view class="form-bar-btn form-bar-save" bindtap="onSave">保存</view>
   </view>
 
+  <view class="hero">
+    <template is="tile" data="{{t: previewTile, cls: 'tile-lg'}}" />
+  </view>
+
   <view class="seg">
-    <view class="seg-item {{type === 'email' ? 'on' : ''}}" data-type="email" bindtap="onType">邮箱</view>
-    <view class="seg-item {{type === 'phone' ? 'on' : ''}}" data-type="phone" bindtap="onType">手机号</view>
-    <view class="seg-item {{type === 'login' ? 'on' : ''}}" data-type="login" bindtap="onType">登录</view>
+    <view
+      wx:for="{{types}}"
+      wx:key="key"
+      class="seg-item {{item.on ? 'on' : ''}}"
+      data-type="{{item.key}}"
+      bindtap="onType"
+    >
+      <view class="{{item.glyphClass}}"></view>
+      <text>{{item.label}}</text>
+    </view>
   </view>
 
   <view class="pills" wx:if="{{login}}">
-    <view class="pill {{provider === 'wechat' ? 'on' : ''}}" data-provider="wechat" bindtap="onProvider">微信</view>
-    <view class="pill {{provider === 'apple' ? 'on' : ''}}" data-provider="apple" bindtap="onProvider">Apple</view>
+    <view class="pill {{provider === 'wechat' ? 'on' : ''}}" data-provider="wechat" bindtap="onProvider">
+      <view class="ico ico-sm ico-wechat"></view>
+      <text>微信</text>
+    </view>
+    <view class="pill {{provider === 'apple' ? 'on' : ''}}" data-provider="apple" bindtap="onProvider">
+      <view class="ico ico-sm ico-apple"></view>
+      <text>Apple</text>
+    </view>
   </view>
 
   <view class="group" style="margin-top:20rpx;">
@@ -64,7 +83,7 @@
           <view class="row-title">{{item.label}}</view>
           <view class="row-sub" wx:if="{{item.sub}}">{{item.sub}}</view>
         </view>
-        <text class="tick" wx:if="{{item.on}}">✓</text>
+        <view wx:if="{{item.on}}" class="ico ico-md ico-tick tick"></view>
       </view>
     </view>
     <view class="hint">很多 App 支持用它登录，记录在这里，换手机号时能看出受影响的网站。</view>
@@ -99,6 +118,9 @@
   <view class="hint">不要在这里填写密码。</view>
 
   <view class="danger-zone" wx:if="{{deleteText}}">
-    <view class="btn btn-danger btn-block" bindtap="onDelete">{{deleteText}}</view>
+    <view class="btn btn-danger btn-block" bindtap="onDelete">
+      <view class="ico ico-sm ico-trash"></view>
+      <text>{{deleteText}}</text>
+    </view>
   </view>
 </view>

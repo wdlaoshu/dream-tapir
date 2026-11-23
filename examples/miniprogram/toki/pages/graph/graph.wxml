@@ -1,10 +1,13 @@
+<import src="../../templates/tile.wxml" />
 <import src="../../templates/tabbar.wxml" />
 
 <view class="page {{theme}}">
   <view class="top">
     <view class="h1">关系图</view>
     <view class="round-group">
-      <view class="round" bindtap="onAdd">+</view>
+      <view class="round" bindtap="onAdd">
+        <view class="ico ico-md ico-plus"></view>
+      </view>
     </view>
   </view>
   <view class="summary">身份 → 平台 → 密钥，同一平台只显示一个节点</view>
@@ -16,14 +19,7 @@
   </view>
 
   <view wx:else class="graph-scroll">
-    <view class="graph-wrap" style="height:{{height}}rpx;">
-      <view
-        wx:for="{{edges}}"
-        wx:key="id"
-        class="gedge"
-        style="{{item.style}}"
-      ></view>
-
+    <view class="graph-wrap" style="height:{{height}}rpx;{{edgesUrl}}">
       <view
         wx:for="{{colHeads}}"
         wx:for-item="h"
@@ -42,7 +38,7 @@
         data-id="{{n.id}}"
         bindtap="onNode"
       >
-        <view class="tile tile-sm" style="{{n.tileStyle}}">{{n.letter}}</view>
+        <template is="tile" data="{{t: n.tile, cls: 'tile-xs'}}" />
         <view class="gnode-main">
           <view class="gnode-title">{{n.title}}</view>
           <view class="gnode-sub" wx:if="{{n.sub}}">{{n.sub}}</view>

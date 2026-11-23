@@ -2,6 +2,7 @@ const store = require('../../utils/store.js');
 const V = require('../../utils/view.js');
 const M = require('../../utils/model.js');
 const ui = require('../../utils/ui.js');
+const Sync = require('../../utils/sync.js');
 
 const app = getApp();
 
@@ -25,6 +26,25 @@ Page({
     menuOpen: false,
     themeText: '跟随系统',
     privacyText: '隐藏号码',
+    syncText: '未开启',
+  },
+
+  syncLine() {
+    const st = Sync.status;
+    if (!Sync.on) return '未开启';
+    if (st.state === 'syncing') return '正在同步…';
+    if (st.state === 'error') return st.err || '同步失败';
+    return '已同步 · ' + this.ago(Sync.at);
+  },
+
+  ago(t) {
+    if (!t) return '还没同步过';
+    const s = (Date.now() - t) / 1000;
+    if (s < 60) return '刚刚';
+    if (s < 3600) return Math.floor(s / 60) + ' 分钟前';
+    if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
+    const d = new Date(t);
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   },
 
   onLoad() {
@@ -55,6 +75,7 @@ Page({
       empty: vm.empty,
       themeText: { auto: '跟随系统', light: '浅色', dark: '深色' }[prefs.theme || 'auto'],
       privacyText: prefs.privacy ? '显示完整号码' : '隐藏号码',
+      syncText: this.syncLine(),
     });
     ui.applyNav(prefs);
   },
@@ -137,6 +158,11 @@ Page({
     const prefs = app.globalData.prefs || {};
     const next = order[(order.indexOf(prefs.theme || 'auto') + 1) % order.length];
     app.setPrefs({ theme: next }).then(() => this.refresh());
+  },
+
+  onSync() {
+    this.setData({ menuOpen: false });
+    ui.go('/pages/sync/sync');
   },
 
   onBackup() {

@@ -9,6 +9,13 @@ const PREFS = 'toki.prefs';
 
 let state = null;
 let seen = new Map();
+let listeners = [];
+
+/* 保存成功后通知（比如让加密同步排一次队） */
+function subscribe(fn) {
+  listeners.push(fn);
+  return () => { listeners = listeners.filter(x => x !== fn); };
+}
 
 /* ---------- 存储适配 ----------
    wx.setStorageSync 在 Web 容器里没有实现，所以优先用异步版本；
@@ -85,6 +92,7 @@ async function save() {
   for (const id of seen.keys()) if (!live.has(id)) state.deleted[id] = now;
   remember();
   await writeRaw(KEY, state);
+  listeners.forEach(fn => { try { fn(); } catch (e) { /* 订阅方自己负责 */ } });
 }
 
 async function replaceState(next) {
@@ -151,5 +159,5 @@ function exportPayload() {
 
 module.exports = {
   KEY, getState, load, save, replaceState, clearAll, importState, exportPayload,
-  loadPrefs, savePrefs, DEFAULT_PREFS,
+  loadPrefs, savePrefs, DEFAULT_PREFS, subscribe,
 };

@@ -2,19 +2,19 @@
 <template name="tabbar">
   <view class="tabbar">
     <view class="tab {{active === 'home' ? 'on' : ''}}" data-tab="home" bindtap="onTab">
-      <text class="tab-ic">◉</text>
+      <view class="ico ico-md ico-card"></view>
       <text>账号</text>
     </view>
     <view class="tab {{active === 'sites' ? 'on' : ''}}" data-tab="sites" bindtap="onTab">
-      <text class="tab-ic">▦</text>
+      <view class="ico ico-md ico-grid"></view>
       <text>网站</text>
     </view>
     <view class="tab {{active === 'tokens' ? 'on' : ''}}" data-tab="tokens" bindtap="onTab">
-      <text class="tab-ic">❖</text>
+      <view class="ico ico-md ico-key"></view>
       <text>密钥</text>
     </view>
     <view class="tab {{active === 'graph' ? 'on' : ''}}" data-tab="graph" bindtap="onTab">
-      <text class="tab-ic">◈</text>
+      <view class="ico ico-md ico-graph"></view>
       <text>关系图</text>
     </view>
   </view>

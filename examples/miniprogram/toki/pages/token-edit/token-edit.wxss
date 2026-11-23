@@ -82,3 +82,57 @@
 .danger-zone {
   margin-top: 40rpx;
 }
+
+.hero-icon {
+  position: relative;
+}
+
+.hero-edit {
+  position: absolute;
+  right: -6rpx;
+  bottom: -6rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--panel-solid);
+  border: 1rpx solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+}
+
+.icon-menu {
+  margin: 10rpx 40rpx 0;
+  background: var(--panel-solid);
+  border-radius: 22rpx;
+  border: 1rpx solid var(--line);
+  overflow: hidden;
+}
+
+.icon-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 22rpx 24rpx;
+  font-size: 27rpx;
+  color: var(--ink);
+}
+
+.icon-menu-item + .icon-menu-item {
+  border-top: 1rpx solid var(--line);
+}
+
+.tick {
+  color: var(--accent);
+}
+
+.btn {
+  gap: 10rpx;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+}
