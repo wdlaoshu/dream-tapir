@@ -1,0 +1,63 @@
+/* 物品编辑 */
+
+.picker-value {
+  font-size: 30rpx;
+  color: var(--accent);
+}
+
+.icon-preview {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 22rpx;
+  background: var(--panel-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.icon-emoji { font-size: 44rpx; line-height: 1; }
+.icon-thumb { width: 88rpx; height: 88rpx; }
+
+.cover-actions {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
+.warranty-row {
+  margin-top: 14rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tag-chip {
+  opacity: 0.42;
+}
+
+.tag-chip.on-tag {
+  opacity: 1;
+  box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.55);
+}
+
+.save-wrap {
+  margin: 36rpx 24rpx 60rpx;
+}
+
+.sheet-foot {
+  margin: 24rpx 0 20rpx;
+}
+
+button::after { border: none; }
+
+.callout {
+  margin: 24rpx 24rpx 0;
+  padding: 22rpx 26rpx;
+  border-radius: 22rpx;
+  background: var(--panel);
+  border-left: 8rpx solid var(--accent);
+}
+
+.callout-title { font-size: 28rpx; font-weight: 600; color: var(--ink); }
+.callout-text { margin-top: 8rpx; font-size: 24rpx; color: var(--ink-2); line-height: 1.55; }

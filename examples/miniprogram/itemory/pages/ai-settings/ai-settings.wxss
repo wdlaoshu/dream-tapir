@@ -1,0 +1,44 @@
+/* AI 服务设置 */
+
+.group-action {
+  font-size: 26rpx;
+  color: var(--accent);
+  padding: 4rpx 8rpx;
+}
+
+.notes-sub {
+  white-space: normal;
+  line-height: 1.55;
+}
+
+.pass-input {
+  margin-top: 14rpx;
+  background: var(--panel-2);
+  border-radius: 14rpx;
+  height: 72rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+}
+
+.model-actions {
+  margin-top: 16rpx;
+  justify-content: flex-start;
+  gap: 16rpx;
+}
+
+.prompt-area {
+  min-height: 220rpx;
+  background: var(--panel-2);
+  border-radius: 16rpx;
+  padding: 18rpx;
+}
+
+.actions {
+  margin: 24rpx 24rpx 0;
+}
+
+button::after { border: none; }
+
+.sheet-foot {
+  margin: 24rpx 4rpx 20rpx;
+}

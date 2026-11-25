@@ -1,0 +1,151 @@
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-title">AI 服务</view>
+    <view class="hero-sub">用兼容 OpenAI 接口的模型，从订单截图或物品照片里读出物品信息</view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">开关</text></view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">启用识图录入</view>
+        <view class="row-sub">关闭不影响物品、流水和统计</view>
+      </view>
+      <switch checked="{{enabled}}" bindchange="onEnabled" color="#0A84FF" />
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">数据外发说明</view>
+        <view class="row-sub notes-sub">勾选后，被识别的图片会以 data URL 发送到你填写的接口地址；本机只保存接口地址、模型名和加密后的 Key，不保存图片副本。识别结果里的常见个人信息（订单号、收件人、手机号等）会在本地被过滤掉。</view>
+      </view>
+      <switch checked="{{consent}}" bindchange="pickConsent" color="#0A84FF" />
+    </view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">接口</text></view>
+    <view class="field">
+      <view class="field-label">接口地址</view>
+      <input class="field-input" value="{{baseURL}}" placeholder="https://api.openai.com/v1"
+        placeholder-class="field-input-placeholder" bindinput="onBaseURL" bindblur="saveProfile" />
+      <view class="field-hint">必须 HTTPS；填 /v1 根地址即可，程序自己拼 /models、/chat/completions 或 /responses。</view>
+    </view>
+    <view class="field">
+      <view class="field-label">接口形态</view>
+      <view class="segmented">
+        <view class="segmented-item {{endpointKind === 'chat_completions' ? 'on' : ''}}" data-kind="chat_completions" bindtap="pickEndpoint">Chat Completions</view>
+        <view class="segmented-item {{endpointKind === 'responses' ? 'on' : ''}}" data-kind="responses" bindtap="pickEndpoint">Responses</view>
+      </view>
+      <view class="field-hint">不确定就留 Chat Completions，绝大多数兼容服务都支持它。</view>
+    </view>
+    <view class="field">
+      <view class="field-inline">
+        <view class="field-label">推理强度</view>
+        <text class="field-hint">不支持的接口会自动降级</text>
+      </view>
+      <view class="chips">
+        <view wx:for="{{effortOptions}}" wx:key="*this" class="chip {{reasoningEffort === item ? 'on' : ''}}"
+          data-effort="{{item}}" bindtap="pickEffort">{{item}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="group">
+    <view class="group-head">
+      <text class="group-title">API Key</text>
+      <text class="group-action" wx:if="{{keySaved}}" bindtap="clearKey">清除</text>
+    </view>
+    <view class="row" wx:if="{{keySaved}}">
+      <view class="row-main">
+        <view class="row-title">已保存{{keySealed ? '（口令加密）' : '（明文）'}}</view>
+        <view class="row-sub">{{keySealed ? '每次冷启动第一次用 AI 需要输入口令解锁' : (keyMasked || '只保存在本机')}}</view>
+      </view>
+    </view>
+    <view class="field">
+      <view class="field-label">{{keySaved ? '换成新的 Key' : '填入 API Key'}}</view>
+      <input class="field-input" value="{{keyInput}}" password="{{true}}" placeholder="sk-…"
+        placeholder-class="field-input-placeholder" bindinput="onKeyInput" />
+    </view>
+    <view class="field">
+      <view class="field-inline">
+        <view>
+          <view class="field-label">用本地口令加密保存</view>
+          <view class="field-hint">小程序没有 Keychain，加密后至少不会以明文躺在 storage 里</view>
+        </view>
+        <switch checked="{{encryptKey}}" bindchange="toggleEncrypt" color="#0A84FF" />
+      </view>
+      <input wx:if="{{encryptKey}}" class="field-input pass-input" value="{{passphrase}}" password="{{true}}"
+        placeholder="设置一个口令（忘了只能重填 Key）" placeholder-class="field-input-placeholder" bindinput="onPassphrase" />
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">保存 Key</view>
+        <view class="row-sub">{{lastTest || '保存后可测试连接'}}</view>
+      </view>
+      <view class="btn btn-accent" bindtap="saveKey">保存</view>
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">测试连接</view>
+        <view class="row-sub">调用 /models 验证地址与 Key</view>
+      </view>
+      <view class="btn" bindtap="testConnection">测试</view>
+    </view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">模型</text></view>
+    <view class="field">
+      <view class="field-label">当前模型</view>
+      <input class="field-input" value="{{model}}" placeholder="例如 gpt-4.1-mini / qwen-vl-max"
+        placeholder-class="field-input-placeholder" bindinput="onModel" bindblur="saveProfile" />
+      <view class="field-inline model-actions">
+        <view class="btn" bindtap="refreshModels">拉取模型列表</view>
+        <picker wx:if="{{modelOptions.length}}" mode="selector" range="{{modelOptions}}" bindchange="pickModelFromList">
+          <view class="btn">从列表选</view>
+        </picker>
+      </view>
+      <view class="field-hint">要选支持图片输入的模型，否则接口会报错。</view>
+    </view>
+  </view>
+
+  <view class="group">
+    <view class="group-head"><text class="group-title">提示词</text></view>
+    <view class="field">
+      <view class="field-label">自定义提示词（可留空）</view>
+      <textarea class="textarea prompt-area" value="{{customPrompt}}" maxlength="4000"
+        placeholder="留空使用桌面版默认提示词；可用 {{categories}} 占位分类列表"
+        placeholder-class="field-input-placeholder" bindinput="onCustomPrompt" bindblur="saveProfile" />
+      <view class="field-hint">输出契约（JSON 字段、不许猜价格、不许带个人信息）会固定追加在末尾，自定义提示词改不掉它。</view>
+    </view>
+  </view>
+
+  <view class="actions">
+    <button class="btn btn-accent btn-full" bindtap="saveProfile">保存设置</button>
+  </view>
+  <view class="actions">
+    <button class="btn btn-full" bindtap="gotoImport">去识图录入</button>
+  </view>
+
+  <!-- 口令解锁面板（加密保存时用） -->
+  <view wx:if="{{unlockOpen}}" class="sheet-mask" bindtap="closeUnlock"></view>
+  <view wx:if="{{unlockOpen}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">输入本地口令</view>
+      <view class="sheet-close" bindtap="closeUnlock">✕</view>
+    </view>
+    <view class="field">
+      <view class="field-label">口令用于解开加密保存的 API Key</view>
+      <input class="field-input" value="{{unlockInput}}" password="{{true}}" placeholder="本地口令"
+        placeholder-class="field-input-placeholder" bindinput="onUnlockInput" focus="{{unlockOpen}}" />
+    </view>
+    <view class="sheet-foot">
+      <button class="btn btn-accent btn-full" bindtap="submitUnlock">解锁</button>
+    </view>
+  </view>
+
+  <view class="hint">
+    桌面版还支持用 GPT Image 系列模型生成透明物品图，那需要 multipart 上传图片编辑接口；
+    小程序这版没有做，封面请用「选图 + 裁剪」。
+  </view>
+</view>

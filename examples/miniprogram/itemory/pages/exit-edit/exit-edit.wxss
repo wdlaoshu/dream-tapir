@@ -1,0 +1,12 @@
+/* 结束持有 */
+
+.picker-value {
+  font-size: 30rpx;
+  color: var(--accent);
+}
+
+.actions {
+  margin: 28rpx 24rpx 0;
+}
+
+button::after { border: none; }

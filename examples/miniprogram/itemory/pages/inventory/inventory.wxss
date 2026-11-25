@@ -1,0 +1,81 @@
+/* 物品列表 */
+
+.search-wrap {
+  position: relative;
+  margin: 20rpx 24rpx 0;
+}
+
+.search {
+  background: var(--field);
+  border-radius: 20rpx;
+  height: 76rpx;
+  padding: 0 72rpx 0 26rpx;
+  font-size: 28rpx;
+  color: var(--ink);
+  box-sizing: border-box;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8rpx;
+  top: 0;
+  height: 76rpx;
+  width: 64rpx;
+  line-height: 76rpx;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 26rpx;
+}
+
+.badge-float {
+  position: absolute;
+  right: 12rpx;
+  top: 12rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.46);
+  color: #fff;
+  font-size: 20rpx;
+}
+
+.tag-line {
+  margin-top: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.entry-cover {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 18rpx;
+}
+
+.entry .pill {
+  margin-top: 10rpx;
+  font-size: 20rpx;
+}
+
+.empty-action {
+  margin-top: 32rpx;
+}
+
+.empty-action button {
+  border: none;
+  outline: none;
+}
+
+.sheet-label {
+  margin: 26rpx 8rpx 12rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.sheet-foot {
+  display: flex;
+  gap: 16rpx;
+  margin: 36rpx 4rpx 20rpx;
+}
+
+button::after { border: none; }

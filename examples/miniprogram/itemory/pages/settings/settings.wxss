@@ -1,0 +1,48 @@
+/* 设置 */
+
+.group-action {
+  font-size: 26rpx;
+  color: var(--accent);
+  padding: 4rpx 8rpx;
+}
+
+.timeline-emoji {
+  width: 56rpx;
+  font-size: 34rpx;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.tag-dot {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 14rpx;
+  flex-shrink: 0;
+}
+
+.color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  padding: 8rpx 0;
+}
+
+.color-dot {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 32rpx;
+}
+
+.color-dot.on {
+  box-shadow: 0 0 0 6rpx rgba(10, 132, 255, 0.32);
+}
+
+.sheet-foot {
+  display: flex;
+  gap: 16rpx;
+  margin: 30rpx 4rpx 20rpx;
+}
+
+.muted { color: var(--ink-3); }
+
+button::after { border: none; }

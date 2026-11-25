@@ -1,0 +1,161 @@
+<import src="../../templates/tabbar.wxml" />
+
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-title">统计</view>
+    <view class="hero-sub">{{range.label}} · 共 {{snapshot.totalItemCount}} 件</view>
+  </view>
+
+  <scroll-view class="period-bar" scroll-x>
+    <view class="chip {{period === 'all' ? 'on' : ''}}" data-period="all" bindtap="pickPeriod">全部</view>
+    <view wx:for="{{years}}" wx:key="*this" class="chip {{period === item ? 'on' : ''}}"
+      data-period="{{item}}" bindtap="pickPeriod">{{item}} 年</view>
+  </scroll-view>
+
+  <view wx:if="{{!hasData}}" class="empty">
+    <view class="empty-emoji">📊</view>
+    <view class="empty-title">还没有数据</view>
+    <view class="empty-text">添加物品、记几笔支出之后，这里会显示投入、回收与日均成本。</view>
+  </view>
+
+  <block wx:if="{{hasData}}">
+    <!-- 期间概览 -->
+    <view class="summary">
+      <view class="summary-cell">
+        <view class="summary-value">{{snapshot.totalExpenseText}}</view>
+        <view class="summary-label">期间投入</view>
+      </view>
+      <view class="summary-cell">
+        <view class="summary-value">{{snapshot.totalIncomeText}}</view>
+        <view class="summary-label">期间回收</view>
+      </view>
+      <view class="summary-cell">
+        <view class="summary-value">{{snapshot.netCostText}}</view>
+        <view class="summary-label">净支出</view>
+      </view>
+    </view>
+
+    <view class="group">
+      <view class="group-head"><text class="group-title">当前在持</text></view>
+      <view class="metric-grid">
+        <view class="metric">
+          <view class="metric-value">{{snapshot.currentExpenseText}}</view>
+          <view class="metric-label">在持物品累计投入</view>
+        </view>
+        <view class="metric">
+          <view class="metric-value">{{snapshot.currentDailyText}}</view>
+          <view class="metric-label">合计日均成本</view>
+        </view>
+        <view class="metric">
+          <view class="metric-value">{{snapshot.periodDailyText}}</view>
+          <view class="metric-label">期间日均花销</view>
+        </view>
+        <view class="metric">
+          <view class="metric-value">{{snapshot.valuationText}}</view>
+          <view class="metric-label">估值合计 · {{snapshot.valuationCount}} 件</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="group">
+      <view class="group-head">
+        <text class="group-title">物品去向</text>
+        <text class="group-hint">在持 {{snapshot.activeCount}} · 已结束 {{snapshot.endedCount}}</text>
+      </view>
+      <view class="bar-row" wx:for="{{statuses}}" wx:key="key">
+        <view class="bar-label">{{item.label}}</view>
+        <view class="bar-track"><view class="bar-fill" style="{{item.colorStyle}};width:100%"></view></view>
+        <view class="bar-value">{{item.count}} 件</view>
+      </view>
+    </view>
+
+    <!-- 现金流 -->
+    <view class="group">
+      <view class="group-head">
+        <text class="group-title">现金流</text>
+        <text class="group-hint">{{period === 'all' ? '按年' : '按月'}}</text>
+      </view>
+      <view class="bar-row" wx:for="{{cashFlow}}" wx:key="key">
+        <view class="bar-label">{{item.label}}</view>
+        <view class="bar-track">
+          <view class="bar-fill" style="width:{{item.width}}%"></view>
+        </view>
+        <view class="bar-value">
+          {{item.expenseText}}<text wx:if="{{item.incomeText}}" class="good-text"> · +{{item.incomeText}}</text>
+        </view>
+      </view>
+      <view class="hint">条形是投入，右侧小字是回收。金额都是整数分算出来的，不会四舍五入到元。</view>
+    </view>
+
+    <!-- 分类投入 -->
+    <view class="group">
+      <view class="group-head"><text class="group-title">分类投入</text></view>
+      <view wx:if="{{!categories.length}}" class="hint">期间没有带金额的投入。</view>
+      <view class="bar-row" wx:for="{{categories}}" wx:key="id">
+        <view class="bar-label"><text>{{item.emoji}}</text> {{item.name}}</view>
+        <view class="bar-track"><view class="bar-fill" style="width:{{item.width}}%"></view></view>
+        <view class="bar-value">{{item.amountText}}</view>
+      </view>
+    </view>
+
+    <!-- 支出构成 -->
+    <view class="group">
+      <view class="group-head"><text class="group-title">额外支出构成</text></view>
+      <view wx:if="{{!expenseKinds.length}}" class="hint">期间没有额外支出。</view>
+      <view class="bar-row" wx:for="{{expenseKinds}}" wx:key="key">
+        <view class="bar-label"><text>{{item.emoji}}</text> {{item.label}}</view>
+        <view class="bar-track"><view class="bar-fill" style="{{item.colorStyle}};width:{{item.width}}%"></view></view>
+        <view class="bar-value">{{item.amountText}} · {{item.count}} 笔</view>
+      </view>
+    </view>
+
+    <!-- 生命周期 -->
+    <view class="group">
+      <view class="group-head">
+        <text class="group-title">陪伴时长分布</text>
+        <text class="group-hint">只算在持物品</text>
+      </view>
+      <view class="bar-row" wx:for="{{holdingBars}}" wx:key="label">
+        <view class="bar-label">{{item.label}}</view>
+        <view class="bar-track"><view class="bar-fill" style="width:{{item.width}}%"></view></view>
+        <view class="bar-value">{{item.count}} 件</view>
+      </view>
+      <view wx:if="{{lifecycle.knownHoldingCount}}" class="hint">
+        平均陪伴 {{lifecycle.averageCurrentHoldingDays}} 天 · 最长 {{lifecycle.longestCurrentHoldingDays}} 天
+      </view>
+    </view>
+
+    <!-- 排行 -->
+    <view wx:if="{{rankList.length}}" class="group">
+      <view class="group-head"><text class="group-title">日均成本最高</text></view>
+      <view class="row" wx:for="{{rankList}}" wx:key="itemId" data-id="{{item.itemId}}" bindtap="openItem">
+        <view class="timeline-emoji">{{item.emoji}}</view>
+        <view class="row-main">
+          <view class="row-title">{{item.name}}</view>
+          <view class="row-sub">日均 {{item.dailyText}}</view>
+        </view>
+        <view class="row-chevron"></view>
+      </view>
+    </view>
+
+    <view wx:if="{{holdList.length}}" class="group">
+      <view class="group-head"><text class="group-title">陪伴最久</text></view>
+      <view class="row" wx:for="{{holdList}}" wx:key="itemId" data-id="{{item.itemId}}" bindtap="openItem">
+        <view class="timeline-emoji">{{item.emoji}}</view>
+        <view class="row-main"><view class="row-title">{{item.name}}</view></view>
+        <view class="row-value">{{item.daysText}}</view>
+      </view>
+    </view>
+
+    <!-- 预警 -->
+    <view wx:if="{{alerts.length}}" class="group">
+      <view class="group-head"><text class="group-title">值得看一眼</text></view>
+      <view class="row" wx:for="{{alerts}}" wx:key="key">
+        <view class="row-main"><view class="row-title">{{item.label}}</view></view>
+        <view class="row-value {{item.tone === 'bad' ? 'danger-text' : (item.tone === 'warn' ? 'warn-text' : '')}}">{{item.count}}</view>
+      </view>
+    </view>
+  </block>
+
+  <template is="tabbar" data="{{active}}" />
+</view>

@@ -1,0 +1,110 @@
+<view class="page {{theme}}">
+  <view class="hero">
+    <view class="hero-title">识图录入</view>
+    <view class="hero-sub">订单截图或物品照片 → 预填物品信息</view>
+  </view>
+
+  <view wx:if="{{!configured}}" class="empty">
+    <view class="empty-emoji">🤖</view>
+    <view class="empty-title">AI 服务还没配好</view>
+    <view class="empty-text">需要接口地址、API Key 和支持图片输入的模型。图片只会发给你填的那个地址。</view>
+    <view class="empty-action">
+      <button class="btn btn-accent" bindtap="gotoSettings">去配置 AI 服务</button>
+    </view>
+  </view>
+
+  <block wx:if="{{configured}}">
+    <view wx:if="{{!imagePath}}" class="pick-box" bindtap="choose">
+      <view class="pick-emoji">📷</view>
+      <view class="pick-title">选一张图</view>
+      <view class="pick-sub">{{canPick ? '订单详情截图或物品本身都可以' : '当前平台不支持选图'}}</view>
+    </view>
+
+    <block wx:if="{{imagePath}}">
+      <view class="preview-wrap">
+        <image class="preview" src="{{imagePath}}" mode="aspectFit" />
+      </view>
+      <view class="actions">
+        <button class="btn btn-full" bindtap="choose">换一张</button>
+        <button class="btn btn-accent btn-full" bindtap="recognize" disabled="{{busy}}">重新识别</button>
+      </view>
+    </block>
+
+    <view wx:if="{{busy}}" class="busy">
+      <view class="busy-title">{{busyText}}</view>
+      <view class="busy-sub">图片已经发出，等模型返回；复杂模型可能要十几秒。</view>
+    </view>
+
+    <view wx:if="{{error}}" class="callout bad">
+      <view class="callout-title">没识别成功</view>
+      <view class="callout-text">{{error}}</view>
+    </view>
+
+    <block wx:if="{{result}}">
+      <view class="group">
+        <view class="group-head">
+          <text class="group-title">识别结果</text>
+          <text class="group-hint">{{result.typeLabel}} · {{result.latencyMs}}ms · {{result.attempts}} 次请求</text>
+        </view>
+        <view class="row">
+          <view class="row-main">
+            <view class="row-title">{{result.name}}</view>
+            <view wx:if="{{result.categoryName}}" class="row-sub">分类：{{result.categoryName}}</view>
+            <view wx:elif="{{result.categoryHint}}" class="row-sub">分类建议：{{result.categoryHint}}（未匹配）</view>
+          </view>
+        </view>
+        <view class="row">
+          <view class="row-main"><view class="row-title">购入价</view></view>
+          <view class="row-value">{{result.priceText ? '¥' + result.priceText : '未识别'}}</view>
+        </view>
+        <view class="row">
+          <view class="row-main"><view class="row-title">购入日期</view></view>
+          <view class="row-value">{{result.acquiredOn || '未识别'}}</view>
+        </view>
+        <view wx:if="{{result.channel}}" class="row">
+          <view class="row-main"><view class="row-title">渠道</view></view>
+          <view class="row-value">{{result.channel}}</view>
+        </view>
+        <view wx:if="{{result.warrantyUntil}}" class="row">
+          <view class="row-main"><view class="row-title">保修截止</view></view>
+          <view class="row-value">{{result.warrantyUntil}}</view>
+        </view>
+        <view wx:if="{{result.notes}}" class="row">
+          <view class="row-main">
+            <view class="row-title">备注</view>
+            <view class="row-sub notes-sub">{{result.notes}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{warnings.length}}" class="callout warn">
+        <view class="callout-title">需要你核对</view>
+        <view wx:for="{{warnings}}" wx:key="*this" class="callout-line">· {{item}}</view>
+      </view>
+
+      <view class="actions">
+        <button class="btn btn-accent btn-full" bindtap="toEditor">去编辑并保存</button>
+      </view>
+      <view class="hint">
+        草稿只预填文字字段；封面不会用这张图（订单截图不适合当封面），需要的话在编辑页单独选。
+      </view>
+    </block>
+  </block>
+
+  <!-- 口令解锁面板 -->
+  <view wx:if="{{unlockOpen}}" class="sheet-mask" bindtap="closeUnlock"></view>
+  <view wx:if="{{unlockOpen}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">输入本地口令</view>
+      <view class="sheet-close" bindtap="closeUnlock">✕</view>
+    </view>
+    <view class="field">
+      <view class="field-label">解密保存在本机的 API Key</view>
+      <input class="field-input" value="{{unlockInput}}" password="{{true}}" placeholder="本地口令"
+        placeholder-class="field-input-placeholder" bindinput="onUnlockInput" focus="{{unlockOpen}}" />
+    </view>
+    <view class="sheet-foot">
+      <button class="btn btn-accent btn-full" bindtap="submitUnlock">解锁并识别</button>
+    </view>
+  </view>
+</view>

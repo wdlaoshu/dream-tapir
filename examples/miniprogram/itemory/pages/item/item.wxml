@@ -1,0 +1,132 @@
+<view class="page {{theme}}">
+  <view wx:if="{{missing}}" class="empty">
+    <view class="empty-emoji">🫥</view>
+    <view class="empty-title">这件物品不在了</view>
+    <view class="empty-text">可能已经被删除。</view>
+  </view>
+
+  <block wx:if="{{detail}}">
+    <!-- 头部 -->
+    <view class="detail-head">
+      <view class="detail-thumb" bindtap="previewCover">
+        <image wx:if="{{detail.coverPath}}" class="detail-cover" src="{{detail.coverPath}}" mode="aspectFill" />
+        <text wx:else class="detail-emoji">{{detail.emoji}}</text>
+      </view>
+      <view class="detail-title-wrap">
+        <view class="detail-name">{{detail.name}}</view>
+        <view class="detail-meta">
+          <text>{{detail.category ? detail.category.emoji + ' ' + detail.category.name : '未分类'}}</text>
+          <text class="dot">·</text>
+          <text>{{detail.statusEmoji}} {{detail.statusLabel}}</text>
+        </view>
+        <view wx:if="{{detail.tags.length}}" class="detail-tags">
+          <text wx:for="{{detail.tags}}" wx:for-item="tag" wx:key="id" class="tag-chip"
+            style="background:{{tag.color}}">{{tag.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 成本小结 -->
+    <view class="group">
+      <view class="group-head">
+        <text class="group-title">持有成本</text>
+        <text wx:if="{{!detail.costAvailable}}" class="warn-text">数据异常，部分指标不可用</text>
+      </view>
+      <view class="metric-grid">
+        <view class="metric">
+          <view class="metric-value">{{detail.dailyCostText}}</view>
+          <view class="metric-label">日均成本</view>
+        </view>
+        <view class="metric">
+          <view class="metric-value">{{detail.holdingText}}</view>
+          <view class="metric-label">陪伴时间</view>
+        </view>
+        <view class="metric">
+          <view class="metric-value">{{detail.totalExpenseText}}</view>
+          <view class="metric-label">累计投入</view>
+        </view>
+        <view class="metric">
+          <view class="metric-value">{{detail.netCostText}}</view>
+          <view class="metric-label">净支出</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 基础信息 -->
+    <view class="group">
+      <view class="group-head"><text class="group-title">物品信息</text></view>
+      <view class="row">
+        <view class="row-main">
+          <view class="row-title">购入价</view>
+          <view wx:if="{{!detail.isAcquisitionPriceKnown}}" class="row-sub">未填写，累计投入只算额外支出</view>
+        </view>
+        <view class="row-value">{{detail.knownPriceText}}</view>
+      </view>
+      <view class="row">
+        <view class="row-main"><view class="row-title">购入日期</view></view>
+        <view class="row-value">{{detail.acquiredText}}</view>
+      </view>
+      <view wx:if="{{detail.channel}}" class="row">
+        <view class="row-main"><view class="row-title">购入渠道</view></view>
+        <view class="row-value">{{detail.channel}}</view>
+      </view>
+      <view wx:if="{{detail.warrantyText}}" class="row">
+        <view class="row-main"><view class="row-title">保修</view></view>
+        <view class="row-value">{{detail.warrantyText}}</view>
+      </view>
+      <view wx:if="{{detail.valuationText}}" class="row">
+        <view class="row-main"><view class="row-title">估值</view></view>
+        <view class="row-value">{{detail.valuationText}}</view>
+      </view>
+      <view wx:if="{{detail.notes}}" class="row">
+        <view class="row-main">
+          <view class="row-title">备注</view>
+          <view class="row-sub notes-sub">{{detail.notes}}</view>
+        </view>
+      </view>
+      <view wx:if="{{detail.isExited}}" class="row">
+        <view class="row-main">
+          <view class="row-title">{{detail.exitReasonText}} · {{detail.exitDateText}}</view>
+          <view wx:if="{{detail.exitNote}}" class="row-sub notes-sub">{{detail.exitNote}}</view>
+        </view>
+        <view class="row-value danger-text" bindtap="undoExit">撤销</view>
+      </view>
+    </view>
+
+    <!-- 操作 -->
+    <view class="actions">
+      <button class="btn btn-full" bindtap="addExpense">记一笔支出</button>
+      <button class="btn btn-full" bindtap="addIncome">记一笔收入</button>
+    </view>
+    <view class="actions">
+      <button wx:if="{{!detail.isExited}}" class="btn btn-full" bindtap="endHolding">结束持有</button>
+      <button class="btn btn-full" bindtap="edit">编辑物品</button>
+    </view>
+
+    <!-- 时间线 -->
+    <view class="group">
+      <view class="group-head">
+        <text class="group-title">时间线</text>
+        <text class="group-hint">点一条记录可编辑或删除</text>
+      </view>
+      <view class="row timeline-row" wx:for="{{detail.timeline}}" wx:key="id"
+        data-index="{{index}}" bindtap="onTimelineTap">
+        <view class="timeline-emoji">{{item.emoji}}</view>
+        <view class="row-main">
+          <view class="row-title">{{item.title}}</view>
+          <view class="row-sub">
+            {{item.dateText}}
+            <text wx:if="{{item.kindLabel}}"> · {{item.kindLabel}}</text>
+            <text wx:if="{{item.isPostExitSettlement}}"> · 结束持有后</text>
+            <text wx:if="{{item.subtitle}}"> · {{item.subtitle}}</text>
+          </view>
+        </view>
+        <view class="row-value {{item.isIncome ? 'good-text' : ''}}">{{item.amountText}}</view>
+      </view>
+    </view>
+
+    <view class="danger-zone">
+      <button class="btn btn-danger btn-full" bindtap="deleteItem">删除这件物品</button>
+    </view>
+  </block>
+</view>

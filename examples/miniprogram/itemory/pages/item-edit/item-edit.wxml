@@ -1,0 +1,147 @@
+<view class="page {{theme}}">
+  <view wx:if="{{sourceNotice}}" class="callout info">
+    <view class="callout-title">AI 识图草稿</view>
+    <view class="callout-text">{{sourceNotice}}</view>
+    <view wx:if="{{priceNeedsConfirmation}}" class="callout-text warn-text">金额归属/币种未明确为单件人民币，请确认后再保存。</view>
+    <view wx:if="{{dateNeedsConfirmation}}" class="callout-text warn-text">没识别到购入日期，默认填了今天。</view>
+    <view wx:if="{{categoryHint}}" class="callout-text">模型建议的分类：{{categoryHint}}</view>
+  </view>
+
+  <view class="form">
+    <view class="field">
+      <view class="field-label">物品名称</view>
+      <input class="field-input" value="{{name}}" maxlength="{{nameMax}}" placeholder="例如：降噪耳机"
+        placeholder-class="field-input-placeholder" bindinput="onName" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">分类</view>
+      <view class="chips">
+        <view wx:for="{{categories}}" wx:key="id" class="chip {{categoryId === item.id ? 'on' : ''}}"
+          data-id="{{item.id}}" bindtap="pickCategory">
+          <text class="chip-emoji">{{item.emoji}}</text>{{item.name}}
+        </view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-inline">
+        <view class="field-label">购入日期</view>
+        <picker mode="date" value="{{acquiredOn}}" end="{{today}}" bindchange="onDateChange">
+          <view class="picker-value">{{acquiredOn}}</view>
+        </picker>
+      </view>
+      <view class="field-hint">日均成本从这一天开始算，第一天算 1 天。</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">购入价（元，可留空）</view>
+      <input class="field-input" value="{{priceText}}" type="digit" placeholder="0.00"
+        placeholder-class="field-input-placeholder" bindinput="onPrice" />
+      <view class="field-hint">留空表示价格未知，累计投入只统计额外支出。填 0 表示免费获得。</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">当前估值（元，可留空）</view>
+      <input class="field-input" value="{{valuationText}}" type="digit" placeholder="0.00"
+        placeholder-class="field-input-placeholder" bindinput="onValuation" />
+      <view class="field-hint">只是参考值，不参与持有成本计算；填写后统计页会显示估值合计。</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">当前状态</view>
+      <view class="segmented">
+        <view wx:for="{{conditionOptions}}" wx:key="id" class="segmented-item {{condition === item.id ? 'on' : ''}}"
+          data-key="{{item.id}}" bindtap="pickCondition">{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图标与封面 -->
+  <view class="form">
+    <view class="field">
+      <view class="field-inline">
+        <view class="field-label">图标</view>
+        <view class="icon-preview" bindtap="openIconPicker">
+          <image wx:if="{{coverPath}}" class="icon-thumb" src="{{coverPath}}" mode="aspectFill" />
+          <text wx:else class="icon-emoji">{{iconSymbol || '📦'}}</text>
+        </view>
+      </view>
+      <view class="field-hint">不选就跟着分类图标走；点右侧图标挑一个 Emoji。</view>
+    </view>
+
+    <view class="field">
+      <view class="field-inline">
+        <view>
+          <view class="field-label">封面图片</view>
+          <view class="field-hint">{{canPickImage ? '从相册或相机选一张，会随备份一起导出。' : '当前平台不支持选图。'}}</view>
+        </view>
+        <view class="cover-actions">
+          <view wx:if="{{coverPath}}" class="btn btn-round" bindtap="removeCover">✕</view>
+          <view class="btn" bindtap="pickCover">{{coverPath ? '更换' : '选择'}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 标签 -->
+  <view class="form">
+    <view class="field">
+      <view class="field-label">标签</view>
+      <view wx:if="{{tags.length}}" class="chips">
+        <view wx:for="{{tags}}" wx:key="id" class="tag-chip {{item.selected ? 'on-tag' : 'off-tag'}}"
+          style="background:{{item.color}}" data-id="{{item.id}}" bindtap="toggleTag">{{item.name}}</view>
+      </view>
+      <view wx:else class="field-hint">还没有标签，可以在「设置 → 标签」里添加，再回来关联。</view>
+    </view>
+  </view>
+
+  <!-- 其他 -->
+  <view class="form">
+    <view class="field">
+      <view class="field-label">购入渠道</view>
+      <input class="field-input" value="{{channel}}" placeholder="京东 / 官网 / 二手…"
+        placeholder-class="field-input-placeholder" bindinput="onChannel" />
+    </view>
+
+    <view class="field">
+      <view class="field-inline">
+        <view class="field-label">保修</view>
+        <switch checked="{{warrantyEnabled}}" bindchange="toggleWarranty" color="#0A84FF" />
+      </view>
+      <view wx:if="{{warrantyEnabled}}" class="warranty-row">
+        <picker mode="date" value="{{warrantyUntil}}" bindchange="onWarrantyDate">
+          <view class="picker-value">{{warrantyUntil || '选择截止日期'}}</view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">备注</view>
+      <textarea class="textarea" value="{{notes}}" maxlength="2000" placeholder="使用感受、配件、存放位置…"
+        placeholder-class="field-input-placeholder" bindinput="onNotes" />
+    </view>
+  </view>
+
+  <view class="save-wrap">
+    <button class="btn btn-accent btn-full" bindtap="save">{{isEditing ? '保存修改' : '添加物品'}}</button>
+  </view>
+
+  <!-- Emoji 选择 -->
+  <view wx:if="{{iconOpen}}" class="sheet-mask" bindtap="closeIconPicker"></view>
+  <view wx:if="{{iconOpen}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">选一个图标</view>
+      <view class="sheet-close" bindtap="closeIconPicker">✕</view>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view class="emoji-grid">
+        <view wx:for="{{emojis}}" wx:key="id" class="emoji-cell {{iconSymbol === item.symbol ? 'on' : ''}}"
+          data-symbol="{{item.symbol}}" bindtap="pickEmoji">{{item.symbol}}</view>
+      </view>
+      <view class="sheet-foot">
+        <button class="btn btn-full" bindtap="useCategoryIcon">用分类图标</button>
+      </view>
+    </scroll-view>
+  </view>
+</view>

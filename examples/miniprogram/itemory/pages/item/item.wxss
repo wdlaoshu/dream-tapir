@@ -1,0 +1,90 @@
+/* 物品详情 */
+
+.detail-head {
+  display: flex;
+  gap: 24rpx;
+  padding: 32rpx;
+  align-items: flex-start;
+}
+
+.detail-thumb {
+  width: 176rpx;
+  height: 176rpx;
+  border-radius: 32rpx;
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.detail-cover {
+  width: 176rpx;
+  height: 176rpx;
+}
+
+.detail-emoji {
+  font-size: 88rpx;
+  line-height: 1;
+}
+
+.detail-title-wrap { flex: 1; min-width: 0; }
+
+.detail-name {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+  word-break: break-all;
+}
+
+.detail-meta {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: var(--ink-2);
+}
+
+.detail-meta .dot { margin: 0 10rpx; }
+
+.detail-tags {
+  margin-top: 14rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.metric-grid { border-top: 1rpx solid var(--line); }
+
+.group-hint {
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.notes-sub {
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 16rpx;
+  margin: 24rpx 24rpx 0;
+}
+
+.actions button { flex: 1; }
+
+.timeline-row { align-items: flex-start; }
+
+.timeline-emoji {
+  width: 56rpx;
+  font-size: 34rpx;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.danger-zone {
+  margin: 36rpx 24rpx 40rpx;
+}
+
+button::after { border: none; }

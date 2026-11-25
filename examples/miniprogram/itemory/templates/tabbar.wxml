@@ -1,0 +1,22 @@
+<!-- Itemory 小程序 · 共用底部导航
+     原生 tabBar 只在 Android / iOS / Harmony 有实现，Web 容器里没有，所以每页自绘一份。 -->
+<template name="tabbar">
+  <view class="tabbar">
+    <view class="tab {{active === 'items' ? 'on' : ''}}" data-tab="items" bindtap="onTab">
+      <text class="tab-emoji">📦</text>
+      <text>物品</text>
+    </view>
+    <view class="tab {{active === 'review' ? 'on' : ''}}" data-tab="review" bindtap="onTab">
+      <text class="tab-emoji">🗂️</text>
+      <text>回顾</text>
+    </view>
+    <view class="tab {{active === 'stats' ? 'on' : ''}}" data-tab="stats" bindtap="onTab">
+      <text class="tab-emoji">📊</text>
+      <text>统计</text>
+    </view>
+    <view class="tab {{active === 'settings' ? 'on' : ''}}" data-tab="settings" bindtap="onTab">
+      <text class="tab-emoji">⚙️</text>
+      <text>设置</text>
+    </view>
+  </view>
+</template>
