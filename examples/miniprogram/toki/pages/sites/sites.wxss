@@ -1,0 +1,33 @@
+.summary {
+  font-size: 26rpx;
+  color: var(--ink-2);
+  padding: 6rpx 12rpx 4rpx;
+}
+
+.cat {
+  margin-top: 26rpx;
+}
+
+.cat-title {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 0 14rpx 12rpx;
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+}
+
+.cat-count {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.cap.dim {
+  color: var(--ink-3);
+}
+
+.empty-sub {
+  padding: 0 30rpx;
+}

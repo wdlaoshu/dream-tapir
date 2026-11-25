@@ -1,0 +1,45 @@
+<view class="page {{theme}} form-page">
+  <view class="form-bar">
+    <view class="form-bar-btn" bindtap="onBack">返回</view>
+    <view class="form-bar-title">备份与导入</view>
+    <view class="form-bar-btn"></view>
+  </view>
+
+  <view class="stat-row">
+    <view class="stat"><b>{{counts.identities}}</b><text>身份</text></view>
+    <view class="stat"><b>{{counts.accounts}}</b><text>网站</text></view>
+    <view class="stat"><b>{{counts.tokens}}</b><text>密钥</text></view>
+  </view>
+
+  <view class="section-title">导出备份</view>
+  <view class="hint no-pad">导出的是完整 JSON，含密钥明文，请像保管密码一样保管。网页版、Scripting 版都认这个格式。</view>
+  <view class="group" style="margin-top:12rpx;">
+    <view class="field field-stack">
+      <view class="json-preview">{{jsonPreview}}</view>
+    </view>
+  </view>
+  <view class="btn-block btn" style="margin-top:20rpx;" bindtap="onCopy">复制 JSON 到剪贴板</view>
+
+  <view class="section-title">导入备份</view>
+  <view class="pills">
+    <view class="pill {{mode === 'merge' ? 'on' : ''}}" data-mode="merge" bindtap="onMode">合并</view>
+    <view class="pill {{mode === 'replace' ? 'on' : ''}}" data-mode="replace" bindtap="onMode">覆盖</view>
+  </view>
+  <view class="hint no-pad">{{mode === 'merge' ? '按 id 合并，同一条记录保留较新的版本。' : '清空本机数据后整体写入备份。'}}</view>
+
+  <view class="group" style="margin-top:12rpx;">
+    <view class="field field-stack">
+      <textarea
+        class="field-textarea mono"
+        value="{{importText}}"
+        placeholder="把 Toki 的备份 JSON 粘贴到这里"
+        placeholder-class="ph"
+        bindinput="onImportInput"
+      />
+    </view>
+  </view>
+  <view class="btn-block btn btn-ghost" style="margin-top:16rpx;" bindtap="onReadClipboard">从剪贴板读取</view>
+  <view class="btn-block btn {{canImport ? '' : 'btn-off'}}" style="margin-top:16rpx;" bindtap="onImport">导入</view>
+
+  <view class="hint">一期没有加密同步：数据只保存在这台设备上，换设备请用这里的 JSON 备份。</view>
+</view>

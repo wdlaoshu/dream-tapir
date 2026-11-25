@@ -1,0 +1,74 @@
+.form-page {
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+}
+
+.form-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 8rpx 6rpx;
+}
+
+.form-bar-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.form-bar-btn {
+  font-size: 28rpx;
+  color: var(--ink-2);
+  padding: 10rpx 12rpx;
+  min-width: 80rpx;
+}
+
+.ph {
+  color: var(--ink-3);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 24rpx;
+}
+
+.stat-row {
+  display: flex;
+  gap: 12rpx;
+  padding: 20rpx 0 6rpx;
+}
+
+.stat {
+  flex: 1;
+  background: var(--panel);
+  border-radius: 24rpx;
+  padding: 22rpx 0;
+  text-align: center;
+}
+
+.stat b {
+  display: block;
+  font-size: 38rpx;
+  color: var(--ink);
+}
+
+.stat text {
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.json-preview {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 22rpx;
+  color: var(--ink-2);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.no-pad {
+  padding: 8rpx 8rpx 0;
+}
+
+.btn-off {
+  opacity: 0.45;
+}

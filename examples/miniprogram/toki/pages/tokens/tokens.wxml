@@ -1,0 +1,65 @@
+<import src="../../templates/tile.wxml" />
+<import src="../../templates/tabbar.wxml" />
+
+<view class="page {{theme}}">
+  <view class="top">
+    <view class="h1">密钥</view>
+    <view class="round-group">
+      <view class="round" bindtap="onAdd">
+        <view class="ico ico-md ico-plus"></view>
+      </view>
+    </view>
+  </view>
+  <view class="summary">{{summary}}</view>
+
+  <view class="empty" wx:if="{{empty}}">
+    <view class="h2">还没有密钥记录</view>
+    <view class="sub empty-sub">添加 API Key、Access Token 或 Gist Token，数据只保存在这台设备上。</view>
+    <view class="btn" bindtap="onAdd">添加第一条密钥</view>
+  </view>
+
+  <block wx:else>
+    <scroll-view class="filters" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <view
+        wx:for="{{filters}}"
+        wx:key="key"
+        class="filter {{item.on ? 'on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onFilter"
+      >{{item.label}}<text class="filter-n">{{item.count}}</text></view>
+    </scroll-view>
+
+    <view class="empty" wx:if="{{noneInCat}}">
+      <view class="sub">这个分类下还没有密钥。</view>
+    </view>
+
+    <view class="rows token-rows">
+      <view wx:for="{{list}}" wx:key="id" class="row token-row" data-id="{{item.id}}" bindtap="onEdit">
+        <template is="tile" data="{{t: item, cls: ''}}" />
+        <view class="row-main">
+          <view class="row-title">
+            {{item.name}}
+            <em>{{item.platform}}</em>
+          </view>
+          <view class="tok-value {{item.revealed ? 'shown' : ''}}">{{item.value}}</view>
+          <view class="row-sub">
+            <text wx:if="{{item.accountName}}" class="tok-acc">{{item.accountName}} · </text>
+            <text>{{item.category}} · </text>
+            <text class="{{item.expCls}}">{{item.expText}}</text>
+            <text wx:if="{{item.notes}}"> · {{item.notes}}</text>
+          </view>
+        </view>
+        <view class="tok-actions">
+          <view class="tok-btn" data-id="{{item.id}}" catchtap="onCopy">
+            <view class="ico ico-sm ico-copy"></view>
+          </view>
+          <view class="tok-btn" data-id="{{item.id}}" catchtap="onReveal">
+            <view class="ico ico-sm {{item.revealed ? 'ico-eyeOff' : 'ico-eye'}}"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <template is="tabbar" data="{{active: active}}" />
+</view>

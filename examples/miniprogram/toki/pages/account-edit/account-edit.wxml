@@ -1,0 +1,142 @@
+<import src="../../templates/tile.wxml" />
+
+<view class="page {{theme}} form-page">
+  <view class="form-bar">
+    <view class="form-bar-btn" bindtap="onBack">取消</view>
+    <view class="form-bar-title">{{title}}</view>
+    <view class="form-bar-btn form-bar-save" bindtap="onSave">保存</view>
+  </view>
+
+  <view class="hero">
+    <view class="hero-icon" bindtap="toggleIconMenu">
+      <template is="tile" data="{{t: previewTile, cls: 'tile-lg'}}" />
+      <view class="hero-edit">
+        <view class="ico ico-sm ico-edit"></view>
+      </view>
+    </view>
+    <view class="hero-name">{{name || '新网站或 App'}}</view>
+  </view>
+
+  <view class="icon-menu" wx:if="{{iconMenuOpen}}">
+    <view class="icon-menu-item" bindtap="onPickIcon">
+      <view class="ico ico-md ico-photo"></view>
+      <text>从相册选择</text>
+    </view>
+    <view class="icon-menu-item" wx:if="{{iconFile || iconData}}" bindtap="onResetIcon">
+      <view class="ico ico-md ico-reset"></view>
+      <text>使用平台默认图标</text>
+    </view>
+  </view>
+
+  <view class="group" style="margin-top:20rpx;">
+    <view class="field">
+      <text class="field-label">名称</text>
+      <input
+        class="field-input"
+        value="{{name}}"
+        placeholder="GitHub、淘宝、微信…"
+        placeholder-class="ph"
+        bindinput="onName"
+      />
+    </view>
+    <view class="field">
+      <text class="field-label">账号名</text>
+      <input
+        class="field-input"
+        value="{{handle}}"
+        placeholder="选填，用户名、昵称或 UID"
+        placeholder-class="ph"
+        bindinput="onHandle"
+      />
+    </view>
+    <view class="field">
+      <text class="field-label">网址</text>
+      <input
+        class="field-input"
+        value="{{domain}}"
+        placeholder="选填，用来识别平台"
+        placeholder-class="ph"
+        bindinput="onDomain"
+      />
+    </view>
+  </view>
+
+  <scroll-view class="suggest-row" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}" wx:if="{{suggestions.length}}">
+    <view
+      wx:for="{{suggestions}}"
+      wx:key="name"
+      class="suggest"
+      data-i="{{index}}"
+      bindtap="onSuggestion"
+    >
+      <template is="tile" data="{{t: item.tile, cls: 'tile-sm'}}" />
+      <text>{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="section-title">用哪个邮箱、手机号或登录账号</view>
+  <view class="group" wx:if="{{!noIdentities}}">
+    <view
+      wx:for="{{picks}}"
+      wx:key="id"
+      class="pick-cell {{item.on ? 'on' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onPick"
+    >
+      <view class="dot" style="background:{{item.color}}"></view>
+      <view class="row-main">
+        <view class="row-title">{{item.label}}</view>
+        <view class="row-sub" wx:if="{{item.sub}}">{{item.sub}}</view>
+      </view>
+      <view wx:if="{{item.on}}" class="ico ico-md ico-tick tick"></view>
+    </view>
+  </view>
+  <view class="empty small-empty" wx:else>
+    <view class="sub">先加一个邮箱或手机号，再回来关联。</view>
+  </view>
+  <view class="hint">可以多选，比如用邮箱注册、再绑定手机号；用微信或 Apple 登录的，选下面的登录账号。</view>
+
+  <view class="section-title">分类</view>
+  <scroll-view class="cat-row" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view
+      wx:for="{{cats}}"
+      wx:key="*this"
+      class="pill {{category === item ? 'on' : ''}}"
+      data-cat="{{item}}"
+      bindtap="onCatChip"
+    >{{item}}</view>
+  </scroll-view>
+  <view class="group">
+    <view class="field">
+      <text class="field-label">自定义</text>
+      <input
+        class="field-input"
+        value="{{category}}"
+        placeholder="手填分类，可自定义"
+        placeholder-class="ph"
+        bindinput="onCategory"
+      />
+    </view>
+  </view>
+
+  <view class="section-title">备注</view>
+  <view class="group">
+    <view class="field field-stack">
+      <textarea
+        class="field-textarea"
+        value="{{notes}}"
+        placeholder="是否开了两步验证、会员到期日"
+        placeholder-class="ph"
+        bindinput="onNotes"
+      />
+    </view>
+  </view>
+  <view class="hint">不要在这里填写密码。</view>
+
+  <view class="danger-zone" wx:if="{{deleteText}}">
+    <view class="btn btn-danger btn-block" bindtap="onDelete">
+      <view class="ico ico-sm ico-trash"></view>
+      <text>{{deleteText}}</text>
+    </view>
+  </view>
+</view>

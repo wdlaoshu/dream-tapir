@@ -1,0 +1,63 @@
+<import src="../../templates/tile.wxml" />
+<import src="../../templates/tabbar.wxml" />
+
+<view class="page {{theme}}">
+  <view class="top">
+    <view class="h1">网站</view>
+    <view class="round-group">
+      <view class="round" bindtap="onAdd">
+        <view class="ico ico-md ico-plus"></view>
+      </view>
+    </view>
+  </view>
+  <view class="summary" wx:if="{{!empty}}">共 {{total}} 个网站与 App</view>
+
+  <view class="empty" wx:if="{{empty}}">
+    <view class="h2">还没有网站</view>
+    <view class="sub empty-sub">记下一个网站或 App，选上它用的是哪个邮箱、哪个手机号。</view>
+    <view class="btn" bindtap="onAdd">添加网站或 App</view>
+  </view>
+
+  <block wx:else>
+    <scroll-view class="filters" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <view
+        wx:for="{{filters}}"
+        wx:key="key"
+        class="filter {{item.on ? 'on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onFilter"
+      >{{item.label}}</view>
+    </scroll-view>
+
+    <view wx:for="{{groups}}" wx:for-item="g" wx:key="title" class="cat">
+      <view class="cat-title">{{g.title}}<text class="cat-count">{{g.count}}</text></view>
+      <view class="rows">
+        <view
+          wx:for="{{g.items}}"
+          wx:for-item="a"
+          wx:key="id"
+          class="row"
+          data-id="{{a.id}}"
+          bindtap="onItem"
+        >
+          <template is="tile" data="{{t: a, cls: ''}}" />
+          <view class="row-main">
+            <view class="row-title">{{a.name}}<em wx:if="{{a.handle}}">{{a.handle}}</em></view>
+            <view class="caps" wx:if="{{!a.loose}}">
+              <view wx:for="{{a.caps}}" wx:for-item="c" wx:key="key" class="cap">
+                <i style="background:{{c.color}}"></i>
+                <text>{{c.label}}</text>
+              </view>
+            </view>
+            <view class="caps" wx:else>
+              <view class="cap dim">未关联身份</view>
+            </view>
+          </view>
+          <view class="ico ico-thin ico-chev chev"></view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <template is="tabbar" data="{{active: active}}" />
+</view>

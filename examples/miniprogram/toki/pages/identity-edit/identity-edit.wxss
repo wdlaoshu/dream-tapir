@@ -1,0 +1,60 @@
+.form-page {
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+}
+
+.form-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 8rpx 6rpx;
+}
+
+.form-bar-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.form-bar-btn {
+  font-size: 28rpx;
+  color: var(--ink-2);
+  padding: 10rpx 12rpx;
+}
+
+.form-bar-save {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ph {
+  color: var(--ink-3);
+}
+
+.switch-cell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.danger-zone {
+  margin-top: 40rpx;
+}
+
+.hero {
+  display: flex;
+  justify-content: center;
+  padding: 24rpx 0 4rpx;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.tick {
+  color: var(--accent);
+}
+
+.btn {
+  gap: 10rpx;
+}
